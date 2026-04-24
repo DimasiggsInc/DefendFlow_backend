@@ -54,7 +54,7 @@ async def get_auth_service(
 ) -> AuthServicePort:
     return AuthService(hasher, auth_repository, jwt_util)
 
-# TODO: Перенести в папку user
+
 async def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security),
     jwt_util: JWTServicePort = Depends(get_jwt_service),
@@ -62,13 +62,9 @@ async def get_current_user(
 ) -> dict:
     """Получение id текущего пользователя"""
     try:
-        print("loooooooooooooooooool")
         a = jwt_util.decode(credentials.credentials)
-        print(a["id"])
-        nickname = await auth_repo.get_name(a["id"])
-        print(nickname)
+        email = await auth_repo.get_email(a["id"])
 
-        return {"id": a["id"], "nickname": nickname}
+        return {"id": a["id"], "email": email}
     except Exception:
-        print("KEEEEEEEEEEEEEEEEEEEEKKKK")
         raise HTTPException(status_code=401, detail="Could not validate credentials")

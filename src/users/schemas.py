@@ -14,7 +14,7 @@ class UserSchemaBase(BaseModel):
 
 class UserSchemaFull(UserSchemaBase):
     """Полная схема пользователя"""
-    nickname: str
+    email: str
     hashed_password: str
     salt: str
 
@@ -22,7 +22,7 @@ class UserSchemaFull(UserSchemaBase):
 class UserSchemaAdd(BaseModel):
     """Схема для добавления пользователей."""
 
-    nickname: str
+    email: str
     hashed_password: str
     salt: str
 
@@ -30,7 +30,7 @@ class UserSchemaAdd(BaseModel):
 class UserAuthenticationRequest(BaseModel):
     """Схема для запроса на добавление пользователей."""
 
-    nickname: str
+    email: str
     password: str
 
 
@@ -43,4 +43,4 @@ class UserAuthenticationResponse(BaseModel):
 
 class UserMeResponse(BaseModel):
     id: UUID
-    nickname: str
+    email: str

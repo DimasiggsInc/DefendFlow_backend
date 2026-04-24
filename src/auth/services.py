@@ -14,14 +14,14 @@ class AuthService(AuthServicePort):
         salt = self.hasher.salt
         hashed_password = self.hasher.encode(user.password, salt)
 
-        user_id = await self.auth_repository.add_user(user.nickname, hashed_password, salt)
+        user_id = await self.auth_repository.add_user(user.email, hashed_password, salt)
 
         jwt_token = self.jwt_util.encode(user_id)
 
         return UserAuthenticationResponse(token=jwt_token, refresh_token="lol")
 
     async def login(self, user: UserAuthenticationRequest) -> UserAuthenticationResponse:
-        user_id = await self.auth_repository.get_id_by_name(user.nickname)
+        user_id = await self.auth_repository.get_id_by_email(user.email)
         salt = await self.auth_repository.get_user_salt(user_id)
         hashed_password = await self.auth_repository.get_user_hashed_password(user_id)
         

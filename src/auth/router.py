@@ -50,9 +50,9 @@ async def register(
 
 @router.get("/me", response_model=UserMeResponse, status_code=status.HTTP_200_OK)
 async def me(current_user: dict = Depends(get_current_user)):
-    """Получить профиль текущего пользователя (заглушка)."""
+    """Получить профиль текущего пользователя."""
 
     return UserMeResponse(
         id=current_user["id"],
-        nickname=current_user["nickname"],
+        email=current_user["email"],
     )

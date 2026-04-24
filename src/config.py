@@ -23,7 +23,8 @@ class Settings:
     )
 
     # CORS настройки
-    BACKEND_CORS_ORIGINS: List[str] = ["*"]
+    ALLOWED_ORIGINS: List[str] = os.getenv("ALLOWED_ORIGINS", "*").split(",")
+    ALLOW_CREDENTIALS: bool = os.getenv("ALLOW_CREDENTIALS", "true").lower() == "true"
 
     PEPPER: str = os.getenv("PEPPER", "pepper")
     SECRET_KEY: str = os.getenv("SECRET_KEY", "lol")

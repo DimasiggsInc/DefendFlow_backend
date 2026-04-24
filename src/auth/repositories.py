@@ -13,8 +13,8 @@ class AuthRepository(AuthRepositoryPort):
     def __init__(self, session: AsyncSession):
         self.session = session
 
-    async def add_user(self, nickname: str, hashed_password: str, salt: str) -> UUID:
-        db_user = User(nickname=nickname, hashed_password=hashed_password, salt=salt)
+    async def add_user(self, email: str, hashed_password: str, salt: str) -> UUID:
+        db_user = User(email=email, hashed_password=hashed_password, salt=salt)
         self.session.add(db_user)
 
         try:
@@ -26,10 +26,10 @@ class AuthRepository(AuthRepositoryPort):
             await self.session.rollback()
             raise UserAlreadyExistsError("User already exists")
 
-    async def get_id_by_name(self, user_nickname: str) -> UUID:
+    async def get_id_by_email(self, user_email: str) -> UUID:
         query = (
             select(User)
-            .where(User.nickname == user_nickname)
+            .where(User.email == user_email)
         )
         res = await self.session.execute(query)
         
@@ -59,7 +59,7 @@ class AuthRepository(AuthRepositoryPort):
 
         return user.salt
     
-    async def get_name(self, user_id: UUID) -> str:
+    async def get_email(self, user_id: UUID) -> str:
         query = (
             select(User)
             .where(User.id == user_id)
@@ -68,4 +68,4 @@ class AuthRepository(AuthRepositoryPort):
         
         user = res.scalars().one()
 
-        return user.nickname
+        return user.email
