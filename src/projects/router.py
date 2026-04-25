@@ -27,6 +27,7 @@ async def get_project_info(project_id: uuid.UUID,): # current_user: dict = Depen
     
     member = ProjectMemberSchema(
         id="123e4567-e89b-12d3-a456-426614174002",
+        email="mail@example.com",
         firstName="Петр",
         lastName="Петров",
         middleName="Петрович",

@@ -73,6 +73,7 @@ class UserMeResponse(BaseModel):
 
 class StudentSchemaFull(UserSchemaBase):
     """Полная схема для студента."""
+    email: UserEmail
     firstName: str
     lastName: str
     middleName: str

@@ -44,7 +44,7 @@ async def register(
     except UserAlreadyExistsError:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail="User with this nickname already exists",
+            detail="User with this email already exists",
         )
 
 
@@ -56,3 +56,7 @@ async def me(current_user: dict = Depends(get_current_user)):
         id=current_user["id"],
         email=current_user["email"],
     )
+
+
+
+# TODO: POST /api/auth/refresh

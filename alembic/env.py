@@ -8,9 +8,8 @@ from sqlalchemy import pool
 from alembic import context
 
 
-from src.database import Base
+from src.models_hub import Base, Admin, Expert, Student, User  # noqa
 
-from src.users.models import User, Expert, Student, Admin  # noqa
 
 # Путь к корню проекта
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
