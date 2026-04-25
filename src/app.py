@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.config import settings
 from src.auth.router import router as auth_router
+from src.projects.router import router as projects_router
 
 from src.database import get_session
 
@@ -32,6 +33,7 @@ def root():
 #     app.include_router(router, prefix="/api/v1")
 
 app.include_router(auth_router, prefix="/api/v1")
+app.include_router(projects_router, prefix="/api/v1")
 
 
 

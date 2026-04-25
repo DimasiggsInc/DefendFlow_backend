@@ -69,3 +69,11 @@ class UserAuthenticationResponse(BaseModel):
 class UserMeResponse(BaseModel):
     id: UUID
     email: UserEmail
+
+
+class StudentSchemaFull(UserSchemaBase):
+    """Полная схема для студента."""
+    firstName: str
+    lastName: str
+    middleName: str
+    academGroup: str
