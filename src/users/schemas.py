@@ -59,6 +59,21 @@ class UserAuthenticationRequest(BaseModel):
         return value.strip().lower()
 
 
+class VerifyEmailCodeRequest(UserAuthenticationRequest):
+    """Схема для запроса на верификацию email."""
+    verification_code: str = Field(..., min_length=6, max_length=6, description="6-значный код верификации")
+
+
+class SendEmailCodeRequest(BaseModel):
+    """Схема для запроса на отправку кода на почту."""
+    email: UserEmail
+
+    @field_validator("email", mode="before")
+    @classmethod
+    def normalize_email(cls, value: str) -> str:
+        return value.strip().lower()
+
+
 class UserAuthenticationResponse(BaseModel):
     """Схема для ответа на запрос на добавление пользователей."""
 

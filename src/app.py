@@ -11,7 +11,18 @@ from src.projects.router import router as projects_router
 from src.database import get_session
 
 
-app = FastAPI()
+from contextlib import asynccontextmanager
+from fastapi import FastAPI
+from src.redis import init_redis, close_redis
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await init_redis(app)
+    yield
+    await close_redis(app)
+
+app = FastAPI(lifespan=lifespan)
+
 
 app.add_middleware(
     CORSMiddleware,

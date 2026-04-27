@@ -19,6 +19,9 @@ class AuthRepositoryPort(Protocol):
 class AuthServicePort(Protocol):
     async def register(self, user: UserAuthenticationRequest) -> UserAuthenticationResponse: ...
     async def login(self, user: UserAuthenticationRequest) -> UserAuthenticationResponse: ...
+    async def get_user_by_email(self, email: str) -> str | None: ...
+    async def send_email_code(self, email: str) -> None: ...
+    async def verify_email_code(self, email: str, code: str) -> None: ...
 
 
 class HasherPort(Protocol):
@@ -51,5 +54,20 @@ class JWTServicePort(Protocol):
         
         :return: {"id": str, "exp": int}
         :rtype: dict
+        """
+        ...
+
+
+
+class MailServicePort(Protocol):
+    sender_email: str
+    sender_password: str
+
+    async def send_email(self, email: str, code: str) -> None:
+        """
+        Docstring for send_email
+        
+        :return: None
+        :rtype: None
         """
         ...

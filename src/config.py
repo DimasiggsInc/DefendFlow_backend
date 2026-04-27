@@ -5,7 +5,9 @@ from dotenv import load_dotenv
 from typing import List
 
 
-load_dotenv(override=True)
+if os.getenv("DOCKER_ENV") != "true":
+    from dotenv import load_dotenv
+    load_dotenv(override=True)
 
 
 class Settings:
@@ -31,6 +33,14 @@ class Settings:
     JWT_ALGORITHM: str = os.getenv("JWT_ALGORITHM", "HS256")
     ACCESS_TOKEN_EXPIRE_MINUTES: int = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 30))
 
+    REDIS_URL: str = os.getenv("REDIS_URL", "redis://localhost:6379/0")
+    REDIS_MAX_CONNECTIONS: int = int(os.getenv("REDIS_MAX_CONNECTIONS", 10))
+    CACHE_TTL: int = int(os.getenv("CACHE_TTL", 6000)) # Время жизни кэша в секундах (по умолчанию 6000 секунд, или 100 минут)
+    EMAIL_CODE_CACHE_TTL: int = int(os.getenv("EMAIL_CODE_CACHE_TTL", 600))
 
+    # Email settings
+    EMAIL_SENDER: str = os.getenv("EMAIL_SENDER", "noreply@defendflow.com")
+    EMAIL_PASSWORD: str = os.getenv("EMAIL_PASSWORD", "password")
+    MAX_VERIFICATION_ATTEMPTS: int = int(os.getenv("MAX_VERIFICATION_ATTEMPTS", 3))
 
 settings = Settings()

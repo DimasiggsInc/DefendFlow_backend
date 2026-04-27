@@ -32,8 +32,11 @@ class AuthRepository(AuthRepositoryPort):
             .where(User.email == user_email)
         )
         res = await self.session.execute(query)
-        
-        user = res.scalars().one()
+        # Добавить обработку случая, когда пользователь не найден, чтобы не вызывать исключение при попытке доступа к несуществующему пользователю.
+        try:
+            user = res.scalars().one()
+        except Exception:
+            raise ValueError("User not found")
 
         return user.id
 

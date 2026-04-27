@@ -3,11 +3,12 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from dotenv import load_dotenv
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.auth.services import MailService, MailServiceMock
 from src.auth.services import AuthService
 from src.auth.utils import Hasher
 from src.auth.utils import JWTService
 
-from src.auth.interfaces import AuthServicePort
+from src.auth.interfaces import AuthServicePort, MailServicePort
 from src.auth.interfaces import HasherPort
 from src.auth.interfaces import AuthRepositoryPort
 from src.auth.interfaces import JWTServicePort
@@ -15,6 +16,7 @@ from src.auth.interfaces import JWTServicePort
 from src.auth.repositories import AuthRepository
 
 from src.database import get_session
+from src.dependencies import get_redis
 
 from src.config import settings
 
@@ -22,6 +24,9 @@ from src.config import settings
 load_dotenv(override=True)
 
 security = HTTPBearer()
+
+async def get_mail_service() -> MailServicePort:
+    return MailServiceMock(settings.EMAIL_SENDER, settings.EMAIL_PASSWORD)
 
 
 async def get_hasher() -> HasherPort:
@@ -50,15 +55,18 @@ def get_jwt_service() -> JWTServicePort:
 async def get_auth_service(
     hasher: HasherPort = Depends(get_hasher),
     auth_repository: AuthRepositoryPort = Depends(get_auth_repository),
-    jwt_util: JWTServicePort = Depends(get_jwt_service)
+    jwt_util: JWTServicePort = Depends(get_jwt_service),
+    redis=Depends(get_redis),
+    mail_service: MailServicePort = Depends(get_mail_service)
 ) -> AuthServicePort:
-    return AuthService(hasher, auth_repository, jwt_util)
+    return AuthService(hasher, auth_repository, jwt_util, redis, mail_service)
 
 
 async def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security),
     jwt_util: JWTServicePort = Depends(get_jwt_service),
-    auth_repo: AuthRepositoryPort = Depends(get_auth_repository)
+    auth_repo: AuthRepositoryPort = Depends(get_auth_repository),
+    redis=Depends(get_redis)
 ) -> dict:
     """Получение id текущего пользователя"""
     try:
