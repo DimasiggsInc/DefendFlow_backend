@@ -1,6 +1,4 @@
 from src.auth.interfaces import HasherPort, AuthRepositoryPort, AuthServicePort, JWTServicePort
-from src.users.schemas import UserAuthenticationRequest, UserAuthenticationResponse
-from src.auth.exceptions import IncorrectPassword
 
 
 class AuthService(AuthServicePort):

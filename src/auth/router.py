@@ -9,7 +9,7 @@ from src.auth.interfaces import AuthServicePort
 from src.auth.dependencies import get_auth_service
 from src.users.schemas import UserAuthenticationRequest, UserAuthenticationResponse, UserMeResponse, VerifyEmailCodeRequest, SendEmailCodeRequest
 
-from src.auth.exceptions import InvalidVerificationCodeError, TooManyVerificationAttemptsError, UserAlreadyExistsError, VerificationCodeExpiredError, VerificationCodeNotFoundError
+from src.auth.exceptions import InvalidVerificationCodeError, TooManyVerificationAttemptsError, UserAlreadyExistsError, VerificationCodeNotFoundError
 
 
 router = APIRouter(

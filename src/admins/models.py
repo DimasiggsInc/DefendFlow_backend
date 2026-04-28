@@ -1,10 +1,10 @@
 """Модели админа для БД."""
 
-from sqlalchemy import UUID, ForeignKey, String, DateTime, func
+from sqlalchemy import UUID, ForeignKey, DateTime, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 import uuid
 from datetime import datetime
-from typing import Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 
 from src.database import Base

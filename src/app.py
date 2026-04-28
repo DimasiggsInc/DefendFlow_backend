@@ -1,13 +1,12 @@
 import uuid
 
 from alembic.util import status
-from fastapi import Depends, FastAPI, Request
+from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from fastapi.responses import JSONResponse
-from sqlalchemy.ext.asyncio import AsyncSession
 
 
 from exceptions import AppException
@@ -15,11 +14,9 @@ from src.config import settings
 from src.auth.router import router as auth_router
 from src.projects.router import router as projects_router
 
-from src.database import get_session
 
 
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
 from src.redis import init_redis, close_redis
 
 @asynccontextmanager

@@ -3,7 +3,7 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from dotenv import load_dotenv
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.auth.services import MailService, MailServiceMock
+from src.auth.services import MailServiceMock
 from src.auth.services import AuthService
 from src.auth.utils import Hasher
 from src.auth.utils import JWTService

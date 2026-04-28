@@ -2,9 +2,8 @@
 
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, status
 
-from src.auth.dependencies import get_current_user
 
 from src.projects.schemas import CuratorSchema, ProjectFullSchemaResponse, ProjectMemberSchema, ProjectLink, ProjectLinkType
 

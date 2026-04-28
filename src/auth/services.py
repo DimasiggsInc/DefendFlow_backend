@@ -1,4 +1,3 @@
-import code
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -7,7 +6,7 @@ import secrets
 
 from src.auth.interfaces import HasherPort, AuthRepositoryPort, AuthServicePort, JWTServicePort, MailServicePort
 from src.users.schemas import UserAuthenticationRequest, UserAuthenticationResponse
-from src.auth.exceptions import IncorrectPassword, InvalidVerificationCodeError, TooManyVerificationAttemptsError, UserNotFoundError, VerificationCodeNotFoundError, VerificationCodeNotFoundError 
+from src.auth.exceptions import IncorrectPassword, InvalidVerificationCodeError, TooManyVerificationAttemptsError, UserNotFoundError, VerificationCodeNotFoundError 
 
 from redis.asyncio import Redis
 
