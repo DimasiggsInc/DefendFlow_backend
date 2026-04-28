@@ -1,6 +1,6 @@
 # Шаблон для fastapi проектов
 
-Структура проекта
+### Структура проекта
 ```
 fastapi-project
 ├── alembic/
@@ -34,10 +34,24 @@ fastapi-project
 ├── templates/
 │   └── index.html
 ├── requirements.txt
-├── .docker-compose.xml
+├── .docker-compose.yml
 ├── Dockerfile
 ├── .env
 ├── .gitignore
 ├── .dockergitignore
 └── alembic.ini
+```
+
+
+### Единый формат ошибок:
+```
+{
+  "error": {
+    "code": "AUTH_001",
+    "status_code": 404,
+    "message": "Invalid credentials",
+    "details": null,
+    "trace_id": uuid
+  }
+}
 ```
