@@ -1,5 +1,5 @@
-from src.exceptions import AppException
 from fastapi import status
+from src.exceptions import AppException
 
 
 class UserNotFoundError(AppException):
@@ -7,8 +7,12 @@ class UserNotFoundError(AppException):
     error_code = "USR_001"
     message = "User not found"
 
-
-class EmailAlreadyExistsError(AppException):
+class UserAlreadyExistsError(AppException):
     status_code = status.HTTP_409_CONFLICT
     error_code = "USR_002"
     message = "Email already registered"
+
+class IncorrectPasswordError(AppException):
+    status_code = status.HTTP_401_UNAUTHORIZED
+    error_code = "USR_003"
+    message = "Incorrect password"

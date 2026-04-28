@@ -3,7 +3,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy import select
 from uuid import UUID
 
-from src.auth.exceptions import UserAlreadyExistsError
+from src.users.exceptions import UserAlreadyExistsError, UserNotFoundError
 from src.auth.interfaces import AuthRepositoryPort
 from src.models_hub import User
 
@@ -24,7 +24,7 @@ class AuthRepository(AuthRepositoryPort):
             return db_user.id
         except IntegrityError:
             await self.session.rollback()
-            raise UserAlreadyExistsError("User already exists")
+            raise UserAlreadyExistsError()
 
     async def get_id_by_email(self, user_email: str) -> UUID:
         query = (
@@ -32,11 +32,11 @@ class AuthRepository(AuthRepositoryPort):
             .where(User.email == user_email)
         )
         res = await self.session.execute(query)
-        # Добавить обработку случая, когда пользователь не найден, чтобы не вызывать исключение при попытке доступа к несуществующему пользователю.
+        
         try:
             user = res.scalars().one()
         except Exception:
-            raise ValueError("User not found")
+            raise UserNotFoundError()
 
         return user.id
 

@@ -1,4 +1,4 @@
-from fastapi import HTTPException, status
+from fastapi import status
 from typing import Any, Optional
 
 
@@ -13,9 +13,3 @@ class AppException(Exception):
         self.message = message or self.message
         self.details = details
         super().__init__(self.message)
-
-class HTTPAppException(AppException, HTTPException):
-    """Мост для быстрых проверок в зависимостях. Лучше использовать чистые AppException."""
-    def __init__(self, message: Optional[str] = None, details: Optional[Any] = None):
-        AppException.__init__(self, message, details)
-        HTTPException.__init__(self, status_code=self.status_code, detail=self.message)
