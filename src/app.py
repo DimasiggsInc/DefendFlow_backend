@@ -1,15 +1,18 @@
 import uuid
 
-from alembic.util import status
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
 
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+
 from fastapi.responses import JSONResponse
 
 
-from exceptions import AppException
+from src.exceptions import AppException
 from src.config import settings
 from src.auth.router import router as auth_router
 from src.projects.router import router as projects_router
@@ -27,6 +30,11 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
+limiter = Limiter(key_func=get_remote_address)
+app.state.limiter = limiter
+
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
 
 app.add_middleware(
     CORSMiddleware,
@@ -42,6 +50,11 @@ def root():
     """Эндпоинт для проверки состояния сервера."""
     return {"status": "ok", "version": settings.APP_VERSION}
 
+
+@app.get("/", tags=["root"])
+@limiter.limit(f"{settings.RATE_LIMIT_COUNT}/second")
+async def root(request: Request):
+    return {"message": "Welcome to the DefendFlow API!"}
 
 
 # for router in routers:
@@ -99,7 +112,7 @@ async def app_exception_handler(request: Request, exc: AppException):
 
 @app.exception_handler(Exception)
 async def unhandled_exception_handler(request: Request, exc: Exception):
-    detail = str(exc) if settings.DEBUG else "Internal server error"
+    detail = "Internal server error"
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         content={
