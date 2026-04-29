@@ -5,7 +5,7 @@ from email.mime.multipart import MIMEMultipart
 import secrets
 
 from src.auth.interfaces import HasherPort, AuthRepositoryPort, AuthServicePort, JWTServicePort, MailServicePort
-from src.users.schemas import StudentSchemaFull, UserAuthenticationRequest, UserAuthenticationResponse
+from src.users.schemas import UserAuthenticationRequest, UserAuthenticationResponse
 from src.auth.exceptions import InvalidVerificationCodeError, TooManyVerificationAttemptsError, VerificationCodeNotFoundError 
 from src.users.exceptions import UserAlreadyExistsError, UserNotFoundError, IncorrectPasswordError
 

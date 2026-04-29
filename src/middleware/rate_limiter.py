@@ -1,7 +1,6 @@
 # src/middleware/rate_limiter.py
-from fastapi import Request, HTTPException, status, FastAPI
+from fastapi import Request, FastAPI
 from cashews import cache
-from src.config import settings
 
 RATE_LIMIT = 100
 WINDOW = 1

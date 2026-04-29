@@ -1,7 +1,6 @@
 import requests
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from collections import defaultdict
 
 def test_rate_limit_sync(url: str, total_requests: int, max_workers: int = 50):
     results = []
@@ -30,7 +29,7 @@ def test_rate_limit_sync(url: str, total_requests: int, max_workers: int = 50):
     limited = sum(1 for _, s, _ in results if s == 429)
     errors = sum(1 for _, s, _ in results if s == "error")
     
-    print(f"\n📊 Итоги:")
+    print("\n📊 Итоги:")
     print(f"⏱️  Длительность: {duration:.2f} сек")
     print(f"🚀 Темп: {total_requests / duration:.1f} req/s")
     print(f"✅ 200 OK: {ok}")

@@ -38,7 +38,7 @@ app.add_middleware(
 
 
 @app.get("/health", tags=["health"])
-def root():
+def health_check():
     """Эндпоинт для проверки состояния сервера."""
     return {"status": "ok", "version": settings.APP_VERSION}
 
