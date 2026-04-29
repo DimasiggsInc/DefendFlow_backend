@@ -30,8 +30,9 @@ class UserSchemaBase(BaseModel):
 class UserSchemaFull(UserSchemaBase):
     """Полная схема пользователя"""
     email: UserEmail
-    hashed_password: str
-    salt: str
+    firstName: str
+    lastName: str
+    middleName: str
 
 
 class UserAuthenticationRequest(BaseModel):

@@ -5,9 +5,9 @@ from email.mime.multipart import MIMEMultipart
 import secrets
 
 from src.auth.interfaces import HasherPort, AuthRepositoryPort, AuthServicePort, JWTServicePort, MailServicePort
-from src.users.schemas import UserAuthenticationRequest, UserAuthenticationResponse
+from src.users.schemas import StudentSchemaFull, UserAuthenticationRequest, UserAuthenticationResponse
 from src.auth.exceptions import InvalidVerificationCodeError, TooManyVerificationAttemptsError, VerificationCodeNotFoundError 
-from src.users.exceptions import UserNotFoundError, IncorrectPasswordError
+from src.users.exceptions import UserAlreadyExistsError, UserNotFoundError, IncorrectPasswordError
 
 from redis.asyncio import Redis
 
@@ -23,6 +23,9 @@ class AuthService(AuthServicePort):
         self.redis = redis
         self.mail_service = mail_service
         self.MAX_VERIFICATION_ATTEMPTS = settings.MAX_VERIFICATION_ATTEMPTS
+    
+    def _email_code_cache_key(self, email: str) -> str:
+        return f"email_code:{email}"
 
     async def register(self, user: UserAuthenticationRequest) -> UserAuthenticationResponse:
         salt = self.hasher.salt
@@ -50,26 +53,29 @@ class AuthService(AuthServicePort):
         jwt_token = self.jwt_util.encode(user_id)
 
         return UserAuthenticationResponse(token=jwt_token, refresh_token="lol")
-    
+
     async def get_user_by_email(self, email: str) -> str | None:
         try:
             user_id = await self.auth_repository.get_id_by_email(email)
             return user_id
-        except ValueError:
+        except UserNotFoundError:
             return None
 
     async def send_email_code(self, email: str) -> None:
+        if await self.get_user_by_email(email) is not None:
+            raise UserAlreadyExistsError()
         code = str(secrets.randbelow(900000) + 100000)
         await self.mail_service.send_email(email, code)
 
-        key = f"email_code:{email}"
+        key = self._email_code_cache_key(email)
         async with self.redis.pipeline() as pipe:
             await pipe.hset(key, mapping={"code": code, "attempts": 0})
             await pipe.expire(key, settings.EMAIL_CODE_CACHE_TTL)
             await pipe.execute()
 
     async def verify_email_code(self, email: str, code: str) -> None:
-        key = f"email_code:{email}"
+        key = self._email_code_cache_key(email)
+        
         if not await self.redis.exists(key):
             print(f"Код для email {email} не найден или истек")
             raise VerificationCodeNotFoundError()
@@ -87,8 +93,7 @@ class AuthService(AuthServicePort):
         if cached_code is None or cached_code != code:
             raise InvalidVerificationCodeError()
         print(f"Код {code} действителен для email {email}")
-        await self.redis.delete(f"email_code:{email}")
-
+        await self.redis.delete(self._email_code_cache_key(email))
 
 
 class MailService(MailServicePort):

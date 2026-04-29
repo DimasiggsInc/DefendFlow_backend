@@ -60,7 +60,7 @@ async def send_email_code(
     user: SendEmailCodeRequest,
     auth_service: AuthServicePort = Depends(get_auth_service)
 ):
-    await auth_service.get_user_by_email(user.email)  # Проверяем, что пользователь с таким email уже существует.
+    # await auth_service.get_user_by_email(user.email)  # Проверяем, что пользователь с таким email уже существует.
 
     await auth_service.send_email_code(user.email)
 

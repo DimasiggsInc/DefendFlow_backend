@@ -14,7 +14,7 @@ class Settings:
     APP_VERSION: str = "0.0.1"
     PORT: int = int(os.getenv("PORT", 8000))
     
-    RATE_LIMIT_COUNT: int = int(os.getenv("RATE_LIMIT_COUNT", 20))
+    RATE_LIMIT_COUNT: int = int(os.getenv("RATE_LIMIT_COUNT", 100))
 
     POSTGRES_SERVER: str = os.getenv("POSTGRES_SERVER", "postgres")
     POSTGRES_USER: str = os.getenv("POSTGRES_USER", "postgres")

@@ -1,26 +1,19 @@
-import uuid
-
 from fastapi import FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-from starlette.middleware.base import BaseHTTPMiddleware
-
-from slowapi import Limiter, _rate_limit_exceeded_handler
-from slowapi.util import get_remote_address
-from slowapi.errors import RateLimitExceeded
-
 from fastapi.responses import JSONResponse
 
-
+from src.middleware.rate_limiter import setup_rate_limit_middleware
+from src.middleware.trace_id import TraceIDMiddleware
 from src.exceptions import AppException
 from src.config import settings
 from src.auth.router import router as auth_router
 from src.projects.router import router as projects_router
 
 
-
 from contextlib import asynccontextmanager
 from src.redis import init_redis, close_redis
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -30,10 +23,9 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
-limiter = Limiter(key_func=get_remote_address)
-app.state.limiter = limiter
 
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+setup_rate_limit_middleware(app)
+app.add_middleware(TraceIDMiddleware)  # Middleware для trace_id
 
 
 app.add_middleware(
@@ -52,7 +44,6 @@ def root():
 
 
 @app.get("/", tags=["root"])
-@limiter.limit(f"{settings.RATE_LIMIT_COUNT}/second")
 async def root(request: Request):
     return {"message": "Welcome to the DefendFlow API!"}
 
@@ -64,16 +55,6 @@ app.include_router(auth_router, prefix="/api/v1")
 app.include_router(projects_router, prefix="/api/v1")
 
 
-# Middleware для trace_id
-class TraceIDMiddleware(BaseHTTPMiddleware):
-    async def dispatch(self, request: Request, call_next):
-        trace_id = request.headers.get("X-Trace-ID", f"req_{uuid.uuid4().hex[:12]}")
-        request.state.trace_id = trace_id
-        response = await call_next(request)
-        response.headers["X-Trace-ID"] = trace_id
-        return response
-
-app.add_middleware(TraceIDMiddleware)
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
