@@ -19,6 +19,7 @@ from src.database import get_session
 from src.dependencies import get_redis
 
 from src.config import settings
+from src.users.models import User
 
 
 load_dotenv(override=True)
@@ -37,7 +38,7 @@ async def get_hasher() -> HasherPort:
 async def get_auth_repository(
     db: AsyncSession = Depends(get_session),
 ) -> AuthRepositoryPort:
-    return AuthRepository(db)
+    return AuthRepository(User, db)
 
 
 def get_jwt_service() -> JWTServicePort:
@@ -70,8 +71,9 @@ async def get_current_user(
     """Получение id текущего пользователя"""
     try:
         a = jwt_util.decode(credentials.credentials)
-        email = await auth_repo.get_email(a["id"])
 
-        return {"id": a["id"], "email": email}  #  TODO: Возвращать схемой пользователя, а не просто словарём
-    except Exception:
+        user = await auth_repo.get_by_id(a["id"])
+        print(user.email)
+        return {"id": user.id, "email": user.email}  #  TODO: Возвращать схемой пользователя, а не просто словарём
+    except Exception as ex:
         raise HTTPException(status_code=401, detail="Could not validate credentials")  # TODO: Исправить на более конкретные ошибки

@@ -3,6 +3,7 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
 import secrets
+from uuid import UUID
 
 from src.auth.interfaces import HasherPort, AuthRepositoryPort, AuthServicePort, JWTServicePort, MailServicePort
 from src.users.schemas import UserAuthenticationRequest, UserAuthenticationResponse
@@ -12,6 +13,7 @@ from src.users.exceptions import UserAlreadyExistsError, UserNotFoundError, Inco
 from redis.asyncio import Redis
 
 from src.config import settings
+from src.users.models import User
 
 
 
@@ -31,36 +33,49 @@ class AuthService(AuthServicePort):
         salt = self.hasher.salt
         hashed_password = self.hasher.encode(user.password, salt)
 
-        user_id = await self.auth_repository.add_user(user.email, hashed_password, salt)
+        create_data = User()
+        create_data.email = user.email
+        create_data.hashed_password = hashed_password
+        create_data.salt = salt
 
-        jwt_token = self.jwt_util.encode(user_id)
+        print(f"Регистрация пользователя с данными: email={user.email}, hashed_password={hashed_password}, salt={salt}")
+        print(create_data.__dict__)
+        
+        user_data = await self.auth_repository.create(create_data)
+
+        jwt_token = self.jwt_util.encode(user_data.id)
 
         return UserAuthenticationResponse(token=jwt_token, refresh_token="lol")
 
     async def login(self, user: UserAuthenticationRequest) -> UserAuthenticationResponse:
         try:
-            user_id = await self.auth_repository.get_id_by_email(user.email)
+            user_data = await self.auth_repository.get_by_email(user.email)
         except ValueError:
             raise UserNotFoundError()
-
-        salt = await self.auth_repository.get_user_salt(user_id)
-        hashed_password = await self.auth_repository.get_user_hashed_password(user_id)
         
-        if not self.hasher.verify(user.password, salt, hashed_password):
+        if not self.hasher.verify(user.password, user_data.salt, user_data.hashed_password):
             raise IncorrectPasswordError()
         
-        
-        jwt_token = self.jwt_util.encode(user_id)
+        jwt_token = self.jwt_util.encode(user_data.id)
 
         return UserAuthenticationResponse(token=jwt_token, refresh_token="lol")
 
     async def get_user_by_email(self, email: str) -> str | None:
         try:
-            user_id = await self.auth_repository.get_id_by_email(email)
-            return user_id
+            user_data = await self.auth_repository.get_by_email(email)
+            return user_data.id
         except UserNotFoundError:
             return None
+    
+    async def get_user_by_id(self, id: UUID) -> str | None:
+        try:
+            user_data = await self.auth_repository.get_by_id(id)
+            return user_data.id
+        except UserNotFoundError:
+            return None
+    
 
+    # TODO: Перенести в MailService
     async def send_email_code(self, email: str) -> None:
         if await self.get_user_by_email(email) is not None:
             raise UserAlreadyExistsError()
