@@ -65,14 +65,13 @@ async def get_auth_service(
 async def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security),
     jwt_util: JWTServicePort = Depends(get_jwt_service),
-    auth_repo: AuthRepositoryPort = Depends(get_auth_repository),
-    redis=Depends(get_redis)
+    auth_repo: AuthRepositoryPort = Depends(get_auth_repository)
 ) -> dict:
     """Получение id текущего пользователя"""
     try:
         a = jwt_util.decode(credentials.credentials)
         email = await auth_repo.get_email(a["id"])
 
-        return {"id": a["id"], "email": email}
+        return {"id": a["id"], "email": email}  #  TODO: Возвращать схемой пользователя, а не просто словарём
     except Exception:
-        raise HTTPException(status_code=401, detail="Could not validate credentials")
+        raise HTTPException(status_code=401, detail="Could not validate credentials")  # TODO: Исправить на более конкретные ошибки

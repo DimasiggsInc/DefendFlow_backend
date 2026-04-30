@@ -6,12 +6,10 @@ from uuid import UUID
 from src.users.exceptions import UserAlreadyExistsError, UserNotFoundError
 from src.auth.interfaces import AuthRepositoryPort
 from src.models_hub import User
-
-from cashews import cache
+from src.cache import cache
 
 from src.users.schemas import UserSchemaFull
 
-cache.setup("redis://redis:6379")
 
 
 # TODO: Перенести в UserRepo

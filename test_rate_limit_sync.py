@@ -48,6 +48,6 @@ def test_rate_limit_sync(url: str, total_requests: int, max_workers: int = 50):
 
 if __name__ == "__main__":
     TARGET_URL = "http://localhost:8000/"  # ← ваш рабочий URL
-    TOTAL = 101
+    TOTAL = 100
     WORKERS = 100  # concurrency
     test_rate_limit_sync(TARGET_URL, TOTAL, WORKERS)

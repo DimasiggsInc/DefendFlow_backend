@@ -15,6 +15,8 @@ class Settings:
     PORT: int = int(os.getenv("PORT", 8000))
     
     RATE_LIMIT_COUNT: int = int(os.getenv("RATE_LIMIT_COUNT", 100))
+    BAN_DURATION: int = int(os.getenv("BAN_DURATION", 3600))
+    WINDOW: int = int(os.getenv("WINDOW", 1))
 
     POSTGRES_SERVER: str = os.getenv("POSTGRES_SERVER", "postgres")
     POSTGRES_USER: str = os.getenv("POSTGRES_USER", "postgres")

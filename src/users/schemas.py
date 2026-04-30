@@ -1,23 +1,72 @@
 """Схемы для пользователя."""
 
 import re
-from typing import Annotated
+from typing import Annotated, Any, Optional
 from uuid import UUID
-from pydantic import BaseModel, Field, field_validator, EmailStr
+from pydantic import AfterValidator, BaseModel, BeforeValidator, Field, field_validator, EmailStr
 from pydantic.config import ConfigDict
 
 
-UserEmail = Annotated[EmailStr, Field(max_length=255, description="Email пользователя")]
+# ─── Функции-валидаторы (чистые, без привязки к классам) ─────────────────────
+def normalize_email(value: Any) -> str:
+    """Нормализация email: strip + lower. Безопасно для не-str значений."""
+    if not isinstance(value, str):
+        return value  # Pydantic сам выбросит ошибку типа позже
+    return value.strip().lower()
 
-# Пароль: мин. 8 символов, обязательные буквы и цифры
-UserPassword = Annotated[
-    str,
-    Field(
-        min_length=8,
-        max_length=128,
-        description="Пароль (мин. 8 символов, буквы и цифры)"
-    )
+def validate_password_strength(value: str) -> str:
+    """Проверка сложности пароля."""
+    if len(value) < 8:
+        raise ValueError("Пароль должен содержать минимум 8 символов")
+    if not re.search(r"[A-ZА-ЯЁ]", value):
+        raise ValueError("Пароль должен содержать хотя бы одну заглавную букву")
+    if not re.search(r"[a-zа-яё]", value):
+        raise ValueError("Пароль должен содержать хотя бы одну строчную букву")
+    if not re.search(r"\d", value):
+        raise ValueError("Пароль должен содержать хотя бы одну цифру")
+    return value
+
+
+NormalizedEmail = Annotated[
+    EmailStr,
+    BeforeValidator(normalize_email),
+    Field(max_length=255, description="Email пользователя")
 ]
+
+StrongPassword = Annotated[
+    str,
+    AfterValidator(validate_password_strength),
+    Field(min_length=8, max_length=128, description="Пароль")
+]
+
+
+
+class AddUser(BaseModel):
+    email: NormalizedEmail
+    password: StrongPassword
+    firstName: Optional[str] = Field(None, min_length=1, max_length=20)
+    lastName: Optional[str] = Field(None, min_length=1, max_length=20)
+    middleName: Optional[str] = Field(None, min_length=1, max_length=20)
+
+
+class UpdateUser(BaseModel):
+    id: UUID
+    email: Optional[NormalizedEmail]
+    firstName: Optional[str] = Field(None, min_length=1, max_length=20)
+    lastName: Optional[str] = Field(None, min_length=1, max_length=20)
+    middleName: Optional[str] = Field(None, min_length=1, max_length=20)
+
+
+class UserAuthenticationRequest(BaseModel):
+    """Схема для запроса на добавление пользователей."""
+
+    email: NormalizedEmail
+    password: StrongPassword
+
+
+class VerifyEmailCodeRequest(UserAuthenticationRequest):
+    """Схема для запроса на верификацию email."""
+    verification_code: str = Field(..., min_length=6, max_length=6, description="6-значный код верификации")
 
 
 class UserSchemaBase(BaseModel):
@@ -29,50 +78,17 @@ class UserSchemaBase(BaseModel):
 
 class UserSchemaFull(UserSchemaBase):
     """Полная схема пользователя"""
-    email: UserEmail
+    email: NormalizedEmail
     firstName: str
     lastName: str
     middleName: str
 
 
-class UserAuthenticationRequest(BaseModel):
-    """Схема для запроса на добавление пользователей."""
-
-    email: UserEmail
-    password: UserPassword
-
-    @field_validator("password")
-    @classmethod
-    def validate_password_strength(cls, value: str) -> str:
-        """Проверка сложности пароля."""
-        if not re.search(r"[A-ZА-ЯЁ]", value):
-            raise ValueError("Пароль должен содержать хотя бы одну заглавную букву")
-        if not re.search(r"[a-zа-яё]", value):
-            raise ValueError("Пароль должен содержать хотя бы одну строчную букву")
-        if not re.search(r"\d", value):
-            raise ValueError("Пароль должен содержать хотя бы одну цифру")
-        return value
-
-    # Нормализация email (нижний регистр)
-    @field_validator("email", mode="before")
-    @classmethod
-    def normalize_email(cls, value: str) -> str:
-        return value.strip().lower()
-
-
-class VerifyEmailCodeRequest(UserAuthenticationRequest):
-    """Схема для запроса на верификацию email."""
-    verification_code: str = Field(..., min_length=6, max_length=6, description="6-значный код верификации")
 
 
 class SendEmailCodeRequest(BaseModel):
     """Схема для запроса на отправку кода на почту."""
-    email: UserEmail
-
-    @field_validator("email", mode="before")
-    @classmethod
-    def normalize_email(cls, value: str) -> str:
-        return value.strip().lower()
+    email: NormalizedEmail
 
 
 class UserAuthenticationResponse(BaseModel):
@@ -84,12 +100,12 @@ class UserAuthenticationResponse(BaseModel):
 
 class UserMeResponse(BaseModel):
     id: UUID
-    email: UserEmail
+    email: NormalizedEmail
 
 
 class StudentSchemaFull(UserSchemaBase):
     """Полная схема для студента."""
-    email: UserEmail
+    email: NormalizedEmail
     firstName: str
     lastName: str
     middleName: str
