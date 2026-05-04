@@ -64,7 +64,7 @@ class AuthService(AuthServicePort):
         try:
             user_data = await self.auth_repository.get_by_email(email)
             return user_data.id
-        except UserNotFoundError:
+        except Exception:
             return None
     
     async def get_user_by_id(self, id: UUID) -> str | None:
