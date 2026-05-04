@@ -1,4 +1,5 @@
 from collections.abc import AsyncIterator
+import re
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine, AsyncSession
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm import DeclarativeBase
@@ -21,8 +22,11 @@ class Base(DeclarativeBase):
 
     @declared_attr
     def __tablename__(cls) -> str:
-        """Генерирует __tablename__ автоматически из имени класса."""
-        return cls.__name__.lower()
+        """Генерирует __tablename__ автоматически из имени класса в snake_case."""
+        # Преобразуем CamelCase в snake_case
+        s1 = re.sub(r'(.)([A-Z][a-z]+)', r'\1_\2', cls.__name__)
+        s2 = re.sub(r'([a-z0-9])([A-Z])', r'\1_\2', s1)
+        return s2.lower()
 
 
 @asynccontextmanager

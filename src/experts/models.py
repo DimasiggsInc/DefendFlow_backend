@@ -4,13 +4,16 @@ from sqlalchemy import UUID, ForeignKey, String, DateTime, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 import uuid
 from datetime import datetime
-from typing import Optional, TYPE_CHECKING
+from typing import List, Optional, TYPE_CHECKING
 
 
 # from src.models_hub import Base, User
+
 from src.database import Base
 if TYPE_CHECKING:
     from src.users.models import User
+    from src.grading.models import Grade
+    from src.registrations.models import ExpertRegistration
 
 
 class Expert(Base):
@@ -29,3 +32,5 @@ class Expert(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), onupdate=func.now())
 
     user: Mapped["User"] = relationship("User", back_populates="expert_profile")
+    registrations: Mapped[List["ExpertRegistration"]] = relationship("ExpertRegistration", back_populates="expert")
+    grades: Mapped[List["Grade"]] = relationship("Grade", back_populates="expert")

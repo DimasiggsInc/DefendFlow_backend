@@ -6,8 +6,8 @@ from typing import List
 
 
 if os.getenv("DOCKER_ENV") != "true":
-    from dotenv import load_dotenv
-    load_dotenv(override=True)
+    ...
+load_dotenv(override=True)
 
 
 class Settings:
@@ -22,10 +22,12 @@ class Settings:
     POSTGRES_USER: str = os.getenv("POSTGRES_USER", "postgres")
     POSTGRES_PASSWORD: str = os.getenv("POSTGRES_PASSWORD", "postgres")
     POSTGRES_NAME: str = os.getenv("POSTGRES_NAME", "defendflow_db")
+    POSTGRES_HOST: str = os.getenv("POSTGRES_HOST", "postgres")
+    POSTGRES_PORT: str = os.getenv("POSTGRES_PORT", "5432")
 
     DATABASE_URL: str = os.getenv(
         "DATABASE_URL",
-        "postgresql+asyncpg://postgres:postgres@localhost:5432/defendflow_db",
+        f"postgresql+asyncpg://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_HOST}:{POSTGRES_PORT}/{POSTGRES_NAME}"
     )
 
     # CORS настройки
@@ -48,3 +50,6 @@ class Settings:
     MAX_VERIFICATION_ATTEMPTS: int = int(os.getenv("MAX_VERIFICATION_ATTEMPTS", 3))
 
 settings = Settings()
+
+
+print(settings.DATABASE_URL)

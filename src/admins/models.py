@@ -4,18 +4,19 @@ from sqlalchemy import UUID, ForeignKey, DateTime, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 import uuid
 from datetime import datetime
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, List
 
 
 from src.database import Base
 if TYPE_CHECKING:
     from src.users.models import User
+    from src.defense.models import DefenseRoom
+    from src.protocols.models import Protocol
 # from src.users.schemas import UserSchemaFull, StudentSchema
 
 
 class Admin(Base):
     """Модель администратора."""
-    __tablename__ = "admin"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     
@@ -27,3 +28,6 @@ class Admin(Base):
 
     # Связь обратно к User
     user: Mapped["User"] = relationship("User", back_populates="admin_profile")
+
+    rooms: Mapped[List["DefenseRoom"]] = relationship("DefenseRoom", back_populates="admin")
+    protocols: Mapped[List["Protocol"]] = relationship("Protocol", back_populates="admin")

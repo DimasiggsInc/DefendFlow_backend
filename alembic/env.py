@@ -8,7 +8,7 @@ from sqlalchemy import pool
 from alembic import context
 
 
-from src.models_hub import Base, Admin, Expert, Student, User  # noqa
+from src.models_hub import *  # noqa
 
 
 # Путь к корню проекта
