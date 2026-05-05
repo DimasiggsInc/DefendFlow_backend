@@ -18,8 +18,6 @@ class UserService(UserServicePort):
 
     async def get_full_profile(self, user_id: UUID) -> BaseModel:
         user = await self.user_repo.get_user_with_profiles(user_id)
-        print(f"{user = }")
-        print(user.last_name)
         
         if user is None:
             raise HTTPException(

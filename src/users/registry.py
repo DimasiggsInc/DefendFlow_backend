@@ -6,6 +6,9 @@ from src.users.interfaces import RoleSerializerPort
 from src.users.models import User
 from src.users.schemas import UserWithoutRoleResponse
 
+from src.users.schemas import UserRolesEnum
+
+
 class RoleRegistry:
     _registry: dict[str, dict[str, Any]] = {}
 
@@ -54,7 +57,7 @@ class RoleRegistry:
             first_name=user.first_name,
             middle_name=user.middle_name,
             last_name=user.last_name,
-            role=None,
+            role=UserRolesEnum.NONE,
             profile=None
         )
 

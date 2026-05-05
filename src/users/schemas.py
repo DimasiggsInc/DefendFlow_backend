@@ -5,7 +5,7 @@ from typing import Annotated, Any, Literal, Optional, Union
 from uuid import UUID
 from pydantic import AfterValidator, BaseModel, BeforeValidator, Field, EmailStr
 from pydantic.config import ConfigDict
-
+from enum import StrEnum
 
 # ─── Функции-валидаторы (чистые, без привязки к классам) ─────────────────────
 def normalize_email(value: Any) -> str:
@@ -39,6 +39,13 @@ StrongPassword = Annotated[
     Field(min_length=8, max_length=128, description="Пароль")
 ]
 
+
+class UserRolesEnum(StrEnum):
+    CURATOR = "curator"
+    ADMIN = "admin"
+    STUDENT = "student"
+    EXPERT = "expert"
+    NONE = "none"
 
 
 class AddUser(BaseModel):
@@ -147,19 +154,19 @@ class UserBaseRead(BaseModel):
 
 
 class UserWithCurator(UserBaseRead):
-    role: Literal["curator"]
+    role: Literal[UserRolesEnum.CURATOR]
     profile: CuratorProfileRead
 
 class UserWithAdmin(UserBaseRead): 
-    role: Literal["admin"]
+    role: Literal[UserRolesEnum.ADMIN]
     profile: AdminProfileRead
 
 class UserWithStudent(UserBaseRead): 
-    role: Literal["student"]
+    role: Literal[UserRolesEnum.STUDENT]
     profile: StudentProfileRead
 
 class UserWithExpert(UserBaseRead): 
-    role: Literal["expert"]
+    role: Literal[UserRolesEnum.EXPERT]
     profile: ExpertProfileRead
 
 

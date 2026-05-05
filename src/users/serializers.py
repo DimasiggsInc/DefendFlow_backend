@@ -3,9 +3,11 @@ from src.users.schemas import UserWithAdmin, UserWithCurator, UserWithExpert, Us
 from src.users.models import User
 from src.users.utils import register_role
 
+from src.users.schemas import UserRolesEnum
 
 
-@register_role("curator_profile")
+
+@register_role(UserRolesEnum.CURATOR + "_profile")
 class CuratorSerializer(RoleSerializerPort):
     def serialize(self, user: User) -> UserWithCurator:
         return UserWithCurator(
@@ -14,11 +16,11 @@ class CuratorSerializer(RoleSerializerPort):
             first_name=user.first_name,
             middle_name=user.middle_name,
             last_name=user.last_name,
-            role="curator",
+            role=UserRolesEnum.CURATOR,
             profile=user.curator_profile
         )
 
-@register_role("admin_profile")
+@register_role(UserRolesEnum.ADMIN + "_profile")
 class AdminSerializer(RoleSerializerPort):
     def serialize(self, user: User) -> UserWithAdmin:
         return UserWithAdmin(
@@ -27,12 +29,12 @@ class AdminSerializer(RoleSerializerPort):
             first_name=user.first_name,
             middle_name=user.middle_name,
             last_name=user.last_name,
-            role="admin",
+            role=UserRolesEnum.ADMIN,
             profile=user.admin_profile
         )
 
 
-@register_role("student_profile")
+@register_role(UserRolesEnum.STUDENT + "_profile")
 class StudentSerializer(RoleSerializerPort):
     def serialize(self, user: User) -> UserWithStudent:
         return UserWithStudent(
@@ -41,12 +43,12 @@ class StudentSerializer(RoleSerializerPort):
             first_name=user.first_name,
             middle_name=user.middle_name,
             last_name=user.last_name,
-            role="student",
+            role=UserRolesEnum.STUDENT,
             profile=user.student_profile
         )
 
 
-@register_role("expert_profile")
+@register_role(UserRolesEnum.EXPERT + "_profile")
 class ExpertSerializer(RoleSerializerPort):
     def serialize(self, user: User) -> UserWithExpert:
         return UserWithExpert(
@@ -55,6 +57,6 @@ class ExpertSerializer(RoleSerializerPort):
             first_name=user.first_name,
             middle_name=user.middle_name,
             last_name=user.last_name,
-            role="expert",
+            role=UserRolesEnum.EXPERT,
             profile=user.expert_profile
         )
