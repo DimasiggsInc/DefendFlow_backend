@@ -8,6 +8,7 @@ from sqlalchemy import pool
 from alembic import context
 
 
+from src.models_hub import Base  # noqa
 from src.models_hub import *  # noqa
 
 

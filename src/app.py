@@ -9,6 +9,7 @@ from src.exceptions import AppException
 from src.config import settings
 from src.auth.router import router as auth_router
 from src.projects.router import router as projects_router
+from src.users.router import router as user_router
 
 
 from contextlib import asynccontextmanager
@@ -53,6 +54,7 @@ async def root(request: Request):
 
 app.include_router(auth_router, prefix="/api/v1")
 app.include_router(projects_router, prefix="/api/v1")
+app.include_router(user_router, prefix="/api/v1")
 
 
 

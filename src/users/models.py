@@ -40,7 +40,7 @@ class User(Base):
     # Отношения (Relationships) - "Один ко многим" или "Один к одному"
     # back_populates позволяет обращаться из дочерней модели к родительской
     admin_profile: Mapped[Optional["Admin"]] = relationship("Admin", back_populates="user", uselist=False, cascade="all, delete-orphan")
-    admin_profile: Mapped[Optional["Curator"]] = relationship("Curator", back_populates="user", uselist=False, cascade="all, delete-orphan")
+    curator_profile: Mapped[Optional["Curator"]] = relationship("Curator", back_populates="user", uselist=False, cascade="all, delete-orphan")
     student_profile: Mapped[Optional["Student"]] = relationship("Student", back_populates="user", uselist=False, cascade="all, delete-orphan")
     expert_profile: Mapped[Optional["Expert"]] = relationship("Expert", back_populates="user", uselist=False, cascade="all, delete-orphan")
 

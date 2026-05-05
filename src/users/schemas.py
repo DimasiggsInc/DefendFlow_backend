@@ -1,9 +1,9 @@
 """Схемы для пользователя."""
 
 import re
-from typing import Annotated, Any, Optional
+from typing import Annotated, Any, Literal, Optional, Union
 from uuid import UUID
-from pydantic import AfterValidator, BaseModel, BeforeValidator, Field, field_validator, EmailStr
+from pydantic import AfterValidator, BaseModel, BeforeValidator, Field, EmailStr
 from pydantic.config import ConfigDict
 
 
@@ -110,3 +110,73 @@ class StudentSchemaFull(UserSchemaBase):
     lastName: str
     middleName: str
     academGroup: str
+
+
+
+
+
+class CuratorProfileRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: UUID
+
+class AdminProfileRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: UUID
+    admin_signature_image_url: Optional[str] = None
+
+class ExpertProfileRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: UUID
+    position: Optional[str] = None
+    company: Optional[str] = None
+
+class StudentProfileRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: UUID
+    academ_group: Optional[str] = None
+
+
+
+class UserBaseRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: UUID
+    email: str
+    first_name: Optional[str] = None
+    middle_name: Optional[str] = None
+    last_name: Optional[str] = None
+
+
+class UserWithCurator(UserBaseRead):
+    role: Literal["curator"]
+    profile: CuratorProfileRead
+
+class UserWithAdmin(UserBaseRead): 
+    role: Literal["admin"]
+    profile: AdminProfileRead
+
+class UserWithStudent(UserBaseRead): 
+    role: Literal["student"]
+    profile: StudentProfileRead
+
+class UserWithExpert(UserBaseRead): 
+    role: Literal["expert"]
+    profile: ExpertProfileRead
+
+
+# Объединённая модель для FastAPI response_model
+UserFullResponse = Union[
+    UserWithCurator,
+    UserWithAdmin,
+    UserWithStudent,
+    UserWithExpert
+]
+
+class UserWithoutRoleResponse(BaseModel):
+    """Базовый ответ, когда у пользователя нет назначенной роли."""
+    id: UUID
+    email: str
+    first_name: Optional[str] = None
+    middle_name: Optional[str] = None
+    last_name: Optional[str]
+    role: None = None
+    profile: None = None

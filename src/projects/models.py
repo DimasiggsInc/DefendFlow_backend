@@ -4,7 +4,7 @@ from typing import Optional, TYPE_CHECKING, List
 from enum import Enum
 
 from sqlalchemy import (
-    UUID, String, DateTime, func, ForeignKey, Text, Integer, Float, Enum as SQLEnum
+    UUID, String, DateTime, func, ForeignKey, Text, Enum as SQLEnum
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -13,8 +13,6 @@ from src.database import Base
 if TYPE_CHECKING:
     from src.curators.models import Curator
     from src.students.models import Student
-    from src.experts.models import Expert
-    from src.admins.models import Admin
     from src.registrations.models import StudentRegistration
 
 

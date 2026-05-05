@@ -10,10 +10,10 @@ from src.auth.utils import JWTService
 
 from src.auth.interfaces import AuthServicePort, MailServicePort
 from src.auth.interfaces import HasherPort
-from src.auth.interfaces import AuthRepositoryPort
+from src.users.interfaces import UserRepositoryPort
 from src.auth.interfaces import JWTServicePort
 
-from src.auth.repositories import AuthRepository
+from src.users.repositories import UserRepository
 
 from src.database import get_session
 from src.dependencies import get_redis
@@ -37,8 +37,8 @@ async def get_hasher() -> HasherPort:
 
 async def get_auth_repository(
     db: AsyncSession = Depends(get_session),
-) -> AuthRepositoryPort:
-    return AuthRepository(User, db)
+) -> UserRepositoryPort:
+    return UserRepository(User, db)
 
 
 def get_jwt_service() -> JWTServicePort:
@@ -55,7 +55,7 @@ def get_jwt_service() -> JWTServicePort:
 
 async def get_auth_service(
     hasher: HasherPort = Depends(get_hasher),
-    auth_repository: AuthRepositoryPort = Depends(get_auth_repository),
+    auth_repository: UserRepositoryPort = Depends(get_auth_repository),
     jwt_util: JWTServicePort = Depends(get_jwt_service),
     redis=Depends(get_redis),
     mail_service: MailServicePort = Depends(get_mail_service)
@@ -66,7 +66,7 @@ async def get_auth_service(
 async def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security),
     jwt_util: JWTServicePort = Depends(get_jwt_service),
-    auth_repo: AuthRepositoryPort = Depends(get_auth_repository)
+    auth_repo: UserRepositoryPort = Depends(get_auth_repository)
 ) -> dict:
     """Получение id текущего пользователя"""
     try:
@@ -75,5 +75,5 @@ async def get_current_user(
         user = await auth_repo.get_by_id(a["id"])
         print(user.email)
         return {"id": user.id, "email": user.email}  #  TODO: Возвращать схемой пользователя, а не просто словарём
-    except Exception as ex:
+    except Exception:
         raise HTTPException(status_code=401, detail="Could not validate credentials")  # TODO: Исправить на более конкретные ошибки

@@ -1,20 +1,16 @@
 import uuid
 from datetime import datetime
-from typing import Optional, TYPE_CHECKING, List
+from typing import Optional, TYPE_CHECKING
 
 from sqlalchemy import (
-    UUID, String, DateTime, func, ForeignKey, Text, Integer, Float
+    UUID, String, DateTime, func, ForeignKey
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.database import Base
 
 if TYPE_CHECKING:
-    from src.users.models import User
-    from src.students.models import Student
-    from src.experts.models import Expert
     from src.admins.models import Admin
-    from src.projects.models import ProjectMember  # Предположительно
     from src.defense.models import DefenseRoom, DefenseSlot
 
 

@@ -1,10 +1,10 @@
 from asyncio import Protocol
 import uuid
 from datetime import datetime
-from typing import Optional, TYPE_CHECKING, List
+from typing import TYPE_CHECKING, List
 
 from sqlalchemy import (
-    UUID, String, DateTime, func, ForeignKey, Text, Integer, Float
+    UUID, String, DateTime, func, ForeignKey, Integer
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -12,11 +12,7 @@ from src.database import Base  # Ваш базовый класс
 
 # Импорты для TYPE_CHECKING, чтобы избежать циклических импортов
 if TYPE_CHECKING:
-    from src.users.models import User
-    from src.students.models import Student
-    from src.experts.models import Expert
     from src.admins.models import Admin
-    from src.projects.models import ProjectMember  # Предположительно
     from src.registrations.models import ExpertRegistration, StudentRegistration
 
 

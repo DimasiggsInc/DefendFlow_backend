@@ -70,7 +70,7 @@ async def send_email_code(
 
 @router.get("/me", response_model=UserMeResponse, status_code=status.HTTP_200_OK)
 async def me(current_user: dict = Depends(get_current_user)):
-    """Получить профиль текущего пользователя."""
+    """Получить id текущего пользователя."""
     print(current_user)
 
     return UserMeResponse(

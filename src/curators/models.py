@@ -1,9 +1,9 @@
 import uuid
 from datetime import datetime
-from typing import Optional, TYPE_CHECKING, List
+from typing import TYPE_CHECKING, List
 
 from sqlalchemy import (
-    UUID, String, DateTime, func, ForeignKey, Text, Integer, Float
+    UUID, DateTime, func, ForeignKey
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 

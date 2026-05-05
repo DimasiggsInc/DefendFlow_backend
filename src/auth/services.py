@@ -5,12 +5,14 @@ from email.mime.multipart import MIMEMultipart
 import secrets
 from uuid import UUID
 
-from src.auth.interfaces import HasherPort, AuthRepositoryPort, AuthServicePort, JWTServicePort, MailServicePort
-from src.users.schemas import UserAuthenticationRequest, UserAuthenticationResponse
-from src.auth.exceptions import InvalidVerificationCodeError, TooManyVerificationAttemptsError, VerificationCodeNotFoundError 
-from src.users.exceptions import UserAlreadyExistsError, UserNotFoundError, IncorrectPasswordError
-
 from redis.asyncio import Redis
+
+from src.auth.interfaces import HasherPort, AuthServicePort, JWTServicePort, MailServicePort
+from src.auth.exceptions import InvalidVerificationCodeError, TooManyVerificationAttemptsError, VerificationCodeNotFoundError 
+
+from src.users.interfaces import UserRepositoryPort
+from src.users.schemas import UserAuthenticationRequest, UserAuthenticationResponse
+from src.users.exceptions import UserAlreadyExistsError, UserNotFoundError, IncorrectPasswordError
 
 from src.config import settings
 from src.users.models import User
@@ -18,7 +20,7 @@ from src.users.models import User
 
 
 class AuthService(AuthServicePort):
-    def __init__(self, hasher: HasherPort, auth_repository: AuthRepositoryPort, jwt_util: JWTServicePort, redis: Redis, mail_service: MailServicePort):
+    def __init__(self, hasher: HasherPort, auth_repository: UserRepositoryPort, jwt_util: JWTServicePort, redis: Redis, mail_service: MailServicePort):
         self.hasher = hasher
         self.auth_repository = auth_repository
         self.jwt_util = jwt_util

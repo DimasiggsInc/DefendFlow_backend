@@ -1,26 +1,11 @@
 from uuid import UUID
 from typing import Protocol
 
-from typing import Optional, List
 
-from src.repositories import BaseRepositoryPort
 from src.users.schemas import (
     UserAuthenticationResponse,
     UserAuthenticationRequest,
 )
-from src.users.models import User
-from sqlalchemy.ext.asyncio import AsyncSession
-
-
-class AuthRepositoryPort(BaseRepositoryPort):
-    def __init__(self, model: type[User], session: AsyncSession) -> None: ...
-    async def get_by_id(self, id: UUID) -> Optional[User]: ...
-    async def get_all(self, skip: int = 0, limit: int = 100) -> List[User]: ...
-    async def create(self, obj: User) -> User: ...
-    async def update(self, obj: User) -> User: ...
-    async def delete(self, obj: User) -> None: ...
-    
-    async def get_by_email(self, user_email: str) -> Optional[User]: ...
 
 
 class AuthServicePort(Protocol):
