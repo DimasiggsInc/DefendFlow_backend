@@ -1,11 +1,12 @@
 """Схемы для проектов."""
 
+from datetime import datetime
 from enum import Enum
 from typing import List, Optional
 from uuid import UUID
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
-from src.users.schemas import StudentSchemaFull
+from src.users.schemas import StudentSchemaFull, UserRolesEnum
 
 
 
@@ -77,3 +78,32 @@ class ProjectFullSchemaResponse(ProjectSchema):
     """Схема для ответа информации о проекте."""
     team: List[ProjectMemberSchema]
     projectLinks: List[ProjectLink]
+
+
+
+
+
+class DefenseParticipantResponse(BaseModel):
+    """Участник защиты: студент или член команды."""
+    id: UUID
+    fullName: str = None
+
+
+class DefenseObserverResponse(BaseModel):
+    """Наблюдатель на защите: преподаватель, эксперт, куратор."""
+    id: UUID
+    fullName: str
+    role: UserRolesEnum
+
+
+class ProjectCalendarItemResponse(BaseModel):
+    """Краткая информация о проекте для календаря защит."""
+    id: UUID
+    projectName: str
+    defenseDateTime: datetime
+    
+    isCurrentUserRegistered: bool = False
+    
+    participants: list[DefenseParticipantResponse] = Field(default_factory=list)
+    observers: list[DefenseObserverResponse] = Field(default_factory=list)
+

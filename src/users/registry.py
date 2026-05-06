@@ -6,7 +6,6 @@ from src.users.interfaces import RoleSerializerPort
 from src.users.models import User
 from src.users.schemas import UserWithoutRoleResponse
 
-from src.users.schemas import UserRolesEnum
 
 
 class RoleRegistry:

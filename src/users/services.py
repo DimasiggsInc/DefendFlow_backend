@@ -18,11 +18,10 @@ class UserService(UserServicePort):
 
     async def get_full_profile(self, user_id: UUID) -> BaseModel:
         user = await self.user_repo.get_user_with_profiles(user_id)
-        print(user.__dict__)
         if user is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="User not found"
             )
-        print(RoleRegistry.resolve(user).__dict__)
+        
         return RoleRegistry.resolve(user)

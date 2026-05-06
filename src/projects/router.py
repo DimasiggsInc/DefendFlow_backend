@@ -1,11 +1,13 @@
 """Обработчик проектов."""
 
+from datetime import datetime
 import uuid
 
 from fastapi import APIRouter, status
 
 
-from src.projects.schemas import CuratorSchema, ProjectFullSchemaResponse, ProjectMemberSchema, ProjectLink, ProjectLinkType
+from src.projects.schemas import CuratorSchema, DefenseObserverResponse, DefenseParticipantResponse, ProjectCalendarItemResponse, ProjectFullSchemaResponse, ProjectMemberSchema, ProjectLink, ProjectLinkType
+from src.users.schemas import UserRolesEnum
 
 
 router = APIRouter(
@@ -17,6 +19,58 @@ router = APIRouter(
 # TODO: Добавить обработку ошибок (например, если проект не найден, вернуть 404)
 
 #========GET========#
+
+@router.get("/calendar", response_model=list[ProjectCalendarItemResponse], status_code=status.HTTP_200_OK)
+async def get_projects_calendar():
+    """Получить список проектов для календаря защит. (Заглушка)"""
+    
+    participant1 = DefenseParticipantResponse(
+        id=uuid.uuid4(),
+        fullName="Петров Пётр Петрович"
+    )
+    participant2 = DefenseParticipantResponse(
+        id=uuid.uuid4(),
+        fullName="Сидорова Анна"
+    )
+    
+    # Наблюдатели (преподаватели, эксперты)
+    observer1 = DefenseObserverResponse(
+        id=uuid.UUID("3fa85f64-5717-4562-b3fc-2c963f66afa6"),
+        fullName="Иванова Мария Сергеевна",
+        role=UserRolesEnum.EXPERT
+    )
+    observer2 = DefenseObserverResponse(
+        id=uuid.UUID("3fa85f64-5717-4562-b3fc-2c963f66afa6"),
+        fullName="Козлов Дмитрий",
+        role=UserRolesEnum.CURATOR
+    )
+    
+    # Элементы календаря
+    calendar_item1 = ProjectCalendarItemResponse(
+        id=uuid.UUID("3fa85f64-5717-4562-b3fc-2c963f66afa6"),
+        projectName="Система управления задачами",
+        defenseDateTime=datetime(2026, 5, 20, 14, 0),
+        isCurrentUserRegistered=True,
+        participants=[participant1, participant2],
+        observers=[observer1, observer2]
+    )
+    
+    calendar_item2 = ProjectCalendarItemResponse(
+        id=uuid.UUID("3fa85f64-5717-4562-b3fc-2c963f66afa6"),
+        projectName="Мобильное приложение для учёта расходов",
+        defenseDateTime=datetime(2026, 5, 20, 15, 30),
+        isCurrentUserRegistered=False,
+        participants=[participant1],  # тот же участник в другом проекте
+        observers=[observer1]
+    )
+    
+    # === Конец заглушки ===
+    
+    # 🔜 Здесь будет фильтрация по датам/статусу из БД
+    # if date_from: ...
+    
+    return [calendar_item1, calendar_item2]
+
 @router.get("/{project_id}", response_model=ProjectFullSchemaResponse, status_code=status.HTTP_200_OK)
 async def get_project_info(project_id: uuid.UUID,): # current_user: dict = Depends(get_current_user)
     """Получить информацию о проекте. (Пока что возвращает заглушку)"""

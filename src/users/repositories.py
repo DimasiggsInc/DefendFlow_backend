@@ -23,7 +23,7 @@ class UserRepository(BaseRepository, UserRepositoryPort):
 
     async def email_exists(self, user_email: str) -> User:
         res = await self.session.execute(select(self.model).where(self.model.email == user_email))
-        return not res.scalar_one_or_none() is None
+        return res.scalar_one_or_none() is not None
 
     async def get_user_with_profiles(self, user_id: UUID) -> User | None:
         load_opts = RoleRegistry.get_load_options()

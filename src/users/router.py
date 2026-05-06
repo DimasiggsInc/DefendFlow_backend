@@ -25,7 +25,6 @@ async def get_profile_info(
 ):
     """Получить профиль текущего пользователя."""
     data = await user_service.get_full_profile(current_user["id"])
-    print(data)
     return data
 
 
