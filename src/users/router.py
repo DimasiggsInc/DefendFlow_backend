@@ -24,7 +24,9 @@ async def get_profile_info(
     user_service: UserServicePort = Depends(get_user_service)
 ):
     """Получить профиль текущего пользователя."""
-    return await user_service.get_full_profile(current_user["id"])
+    data = await user_service.get_full_profile(current_user["id"])
+    print(data)
+    return data
 
 
 @router.patch("/profile", response_model=UserFullResponse | UserWithoutRoleResponse, status_code=status.HTTP_200_OK)

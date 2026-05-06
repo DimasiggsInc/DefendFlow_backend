@@ -184,7 +184,7 @@ class UserWithoutRoleResponse(BaseModel):
     email: str
     first_name: Optional[str] = None
     middle_name: Optional[str] = None
-    last_name: Optional[str]
+    last_name: Optional[str] = None
     role: None = None
     profile: None = None
 
