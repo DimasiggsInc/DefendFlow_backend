@@ -187,3 +187,54 @@ class UserWithoutRoleResponse(BaseModel):
     last_name: Optional[str]
     role: None = None
     profile: None = None
+
+
+
+class CuratorProfileUpdate(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+class AdminProfileUpdate(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    admin_signature_image_url: Optional[str] = None
+
+class ExpertProfileUpdate(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    position: Optional[str] = None
+    company: Optional[str] = None
+
+class StudentProfileUpdate(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    academ_group: Optional[str] = None
+
+
+
+class UserBaseUpdate(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    first_name: Optional[str] = None
+    middle_name: Optional[str] = None
+    last_name: Optional[str] = None
+
+
+class UserWithCuratorRequest(UserBaseUpdate):
+    role: Literal[UserRolesEnum.CURATOR]
+    profile: CuratorProfileUpdate
+
+class UserWithAdminRequest(UserBaseUpdate): 
+    role: Literal[UserRolesEnum.ADMIN]
+    profile: AdminProfileUpdate
+
+class UserWithStudentRequest(UserBaseUpdate): 
+    role: Literal[UserRolesEnum.STUDENT]
+    profile: StudentProfileUpdate
+
+class UserWithExpertRequest(UserBaseUpdate): 
+    role: Literal[UserRolesEnum.EXPERT]
+    profile: ExpertProfileUpdate
+
+
+UserFullRequest = Union[
+    UserWithCuratorRequest,
+    UserWithAdminRequest,
+    UserWithStudentRequest,
+    UserWithExpertRequest
+]
