@@ -22,6 +22,10 @@ class UserRepository(BaseRepository, UserRepositoryPort):
         res = await self.session.execute(select(self.model).where(self.model.email == user_email))
         return res.scalar_one_or_none()
 
+    async def email_exists(self, user_email: str) -> User:
+        res = await self.session.execute(select(self.model).where(self.model.email == user_email))
+        return not res.scalar_one_or_none() is None
+
 
     async def get_user_with_profiles(self, user_id: UUID) -> User | None:
         # ✅ Репозиторий динамически формирует JOIN-ы через реестр

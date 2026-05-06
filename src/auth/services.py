@@ -76,10 +76,12 @@ class AuthService(AuthServicePort):
         except UserNotFoundError:
             return None
     
+    async def email_exists(self, email: str) -> bool:
+        return self.auth_repository.email_exists(email)
 
     # TODO: Перенести в MailService
     async def send_email_code(self, email: str) -> None:
-        if await self.get_user_by_email(email) is not None:
+        if await self.email_exists(email) is True:
             raise UserAlreadyExistsError()
         code = str(secrets.randbelow(900000) + 100000)
         await self.mail_service.send_email(email, code)

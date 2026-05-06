@@ -25,3 +25,12 @@ async def get_profile_info(
 ):
     """Получить профиль текущего пользователя."""
     return await user_service.get_full_profile(current_user["id"])
+
+
+@router.post("/profile", response_model=UserFullResponse | UserWithoutRoleResponse, status_code=status.HTTP_200_OK)
+async def get_profile_info(
+    current_user: dict = Depends(get_current_user),
+    user_service: UserServicePort = Depends(get_user_service)
+):
+    """Получить профиль текущего пользователя."""
+    return await user_service.get_full_profile(current_user["id"])
