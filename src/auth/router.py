@@ -78,4 +78,25 @@ async def me(current_user: dict = Depends(get_current_user)):
         email=current_user["email"],
     )
 
+
+# from pydantic import BaseModel
+# from uuid import UUID
+# from src.users.schemas import UserRolesEnum
+
+
+# class SetRoleRequest(BaseModel):
+#     user_id: UUID
+#     role: UserRolesEnum = UserRolesEnum.STUDENT
+
+
+# @router.post("set-role", status_code=status.HTTP_200_OK)
+# async def set_user_role(
+#     request: SetRoleRequest,
+#     auth_service: AuthServicePort = Depends(get_auth_service)
+# ):
+#     await auth_service.set_role(request)
+
+#     return {"message": "Role set"}
+
+
 # TODO: POST /api/auth/refresh

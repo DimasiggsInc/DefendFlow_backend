@@ -1,5 +1,5 @@
 from uuid import UUID
-from typing import Protocol
+from typing import Any, Protocol
 
 from typing import Optional, List
 
@@ -9,6 +9,7 @@ from src.repositories import BaseRepositoryPort
 from src.users.schemas import (
     UserAuthenticationResponse,
     UserAuthenticationRequest,
+    UserFullRequest,
 )
 from src.users.models import User
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -26,6 +27,9 @@ class UserRepositoryPort(BaseRepositoryPort):
     async def email_exists(self, user_email: str) -> bool: ...
     
     async def get_user_with_profiles(self, user_id: UUID) -> User | None: ...
+    # TODO: Сделать передачу SQLAlchemy модели в репо
+    async def update_user(self, user_id: UUID, **kwargs) -> User: ...
+    async def update_profile(self, user_id: UUID, profile_type: str, **kwargs) -> Any: ...
 
 
 class UserServicePort(Protocol):
@@ -36,6 +40,7 @@ class UserServicePort(Protocol):
     async def verify_email_code(self, email: str, code: str) -> None: ...
 
     async def get_full_profile(self, user_id: UUID) -> BaseModel: ...
+    async def update_full_profile(self, user_id: UUID, user_data: UserFullRequest) -> BaseModel: ...
 
 
 class RoleSerializerPort(Protocol):

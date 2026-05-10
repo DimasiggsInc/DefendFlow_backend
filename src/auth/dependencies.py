@@ -3,7 +3,7 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from dotenv import load_dotenv
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.auth.services import MailServiceMock
+from src.auth.services import MailService, MailServiceMock
 from src.auth.services import AuthService
 from src.auth.utils import Hasher
 from src.auth.utils import JWTService
@@ -27,7 +27,7 @@ load_dotenv(override=True)
 security = HTTPBearer()
 
 async def get_mail_service() -> MailServicePort:
-    return MailServiceMock(settings.EMAIL_SENDER, settings.EMAIL_PASSWORD)
+    return MailService(settings.EMAIL_SENDER, settings.EMAIL_PASSWORD)
 
 
 async def get_hasher() -> HasherPort:
