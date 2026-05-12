@@ -43,6 +43,7 @@ class User(Base):
     curator_profile: Mapped[Optional["Curator"]] = relationship("Curator", back_populates="user", uselist=False, cascade="all, delete-orphan")
     student_profile: Mapped[Optional["Student"]] = relationship("Student", back_populates="user", uselist=False, cascade="all, delete-orphan")
     expert_profile: Mapped[Optional["Expert"]] = relationship("Expert", back_populates="user", uselist=False, cascade="all, delete-orphan")
+    roles = relationship("UserRole", back_populates="user", cascade="all, delete-orphan", lazy="selectin")
 
     def get_full_name(self) -> str:
         parts = [self.last_name, self.first_name, self.middle_name]

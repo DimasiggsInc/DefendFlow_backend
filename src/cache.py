@@ -9,6 +9,7 @@ cache.setup(settings.REDIS_URL)
 class CacheKeys:
     USER_BY_EMAIL: Final[str] = "user:{user_email}"
     USER_PROFILE: Final[str] = "user_profile:{user_id}"
+    USER_ROLES: Final[str] = "user_roles:{user_id}"
 
     @staticmethod
     def user_by_email(email: str) -> str:

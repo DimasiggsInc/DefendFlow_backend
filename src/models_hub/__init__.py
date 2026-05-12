@@ -6,6 +6,7 @@ from src.admins.models import Admin  # noqa
 from src.students.models import Student  # noqa
 from src.experts.models import Expert  # noqa
 from src.curators.models import Curator  # noqa
+from src.roles.models import UserRole  # noqa
 
 # 2. Затем проекты (зависят от пользователей/кураторов)
 from src.projects.models import Project, ProjectMember, ProjectLink  # noqa

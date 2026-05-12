@@ -9,7 +9,7 @@ from alembic import context
 
 
 from src.models_hub import Base  # noqa
-from src.models_hub import *  # noqa
+from src import models_hub  # noqa
 
 
 # Путь к корню проекта
