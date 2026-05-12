@@ -54,3 +54,6 @@ class UserService(UserServicePort):
         
         updated_user = await self.user_repo.get_user_with_profiles(user_id)
         return RoleRegistry.resolve(updated_user)
+
+    async def get_roles(self, user_id: UUID):
+        return await self.user_repo.get_roles(user_id)

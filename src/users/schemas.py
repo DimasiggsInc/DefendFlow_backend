@@ -1,7 +1,7 @@
 """Схемы для пользователя."""
 
 import re
-from typing import Annotated, Any, Literal, Optional, Union
+from typing import Annotated, Any, List, Literal, Optional, Union
 from uuid import UUID
 from pydantic import AfterValidator, BaseModel, BeforeValidator, Field, EmailStr
 from pydantic.config import ConfigDict
@@ -108,6 +108,7 @@ class UserAuthenticationResponse(BaseModel):
 class UserMeResponse(BaseModel):
     id: UUID
     email: NormalizedEmail
+    roles: List[Optional[UserRolesEnum]] = []
 
 
 class StudentSchemaFull(UserSchemaBase):

@@ -8,6 +8,8 @@ from src.auth.interfaces import AuthServicePort
 
 from src.auth.dependencies import get_auth_service
 from src.users.schemas import UserAuthenticationRequest, UserAuthenticationResponse, UserMeResponse, VerifyEmailCodeRequest, SendEmailCodeRequest
+from src.users.dependencies import get_user_service
+from src.users.interfaces import UserServicePort
 
 
 
@@ -25,6 +27,7 @@ router = APIRouter(
 async def login(
     user: UserAuthenticationRequest, auth_service: AuthServicePort = Depends(get_auth_service)
 ) -> UserAuthenticationResponse:
+    # TODO: Пробрасывать ошибку при почте, которой не существует
     user_response = await auth_service.login(user)
 
     return user_response
@@ -67,15 +70,21 @@ async def send_email_code(
     return {"message": "Verification code sent to email"}
 
 
-
+# TODO: Сделать возрват роли пользователя
 @router.get("/me", response_model=UserMeResponse, status_code=status.HTTP_200_OK)
-async def me(current_user: dict = Depends(get_current_user)):
+async def me(
+    current_user: dict = Depends(get_current_user),
+    user_service: UserServicePort = Depends(get_user_service)
+):
     """Получить id текущего пользователя."""
-    print(current_user)
+    user_roles = await user_service.get_roles(current_user["id"])
+    # print(current_user)
+    # print(user_roles)
 
     return UserMeResponse(
         id=current_user["id"],
         email=current_user["email"],
+        roles=user_roles,
     )
 
 

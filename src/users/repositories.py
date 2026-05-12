@@ -1,9 +1,10 @@
-from typing import Any
+from typing import Any, List
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update
 from uuid import UUID
 
+from src.models_hub import UserRole
 from src.admins.models import Admin
 from src.curators.models import Curator
 from src.experts.models import Expert
@@ -43,6 +44,13 @@ class UserRepository(BaseRepository, UserRepositoryPort):
         
         result = await self.session.execute(stmt)
         return result.scalar_one_or_none()
+    
+    @cache(ttl="5m", key=CacheKeys.USER_ROLES)  # "user_roles:{user_id}"
+    async def get_roles(self, user_id: UUID) -> List[UserRolesEnum]:
+        stmt = select(UserRole.role_name).where(UserRole.user_id == user_id)
+        result = await self.session.execute(stmt)
+        
+        return [UserRolesEnum(role_str) for role_str, in result.fetchall()]
     
     # TODO: Сделать передачу SQLAlchemy модели в репо
     async def update_user(self, user_id: UUID, **kwargs) -> User:
