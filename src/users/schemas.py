@@ -51,17 +51,18 @@ class UserRolesEnum(StrEnum):
 class AddUser(BaseModel):
     email: NormalizedEmail
     password: StrongPassword
-    firstName: Optional[str] = Field(None, min_length=1, max_length=20)
-    lastName: Optional[str] = Field(None, min_length=1, max_length=20)
-    middleName: Optional[str] = Field(None, min_length=1, max_length=20)
+    first_name: Optional[str] = Field(None, min_length=1, max_length=20)
+    last_name: Optional[str] = Field(None, min_length=1, max_length=20)
+    middle_name: Optional[str] = Field(None, min_length=1, max_length=20)
 
 
-class UpdateUser(BaseModel):
-    id: UUID
-    email: Optional[NormalizedEmail]
-    firstName: Optional[str] = Field(None, min_length=1, max_length=20)
-    lastName: Optional[str] = Field(None, min_length=1, max_length=20)
-    middleName: Optional[str] = Field(None, min_length=1, max_length=20)
+class UserPatchSchema(BaseModel):
+    first_name: Optional[str] = Field(default=None, min_length=1, max_length=100)
+    last_name: Optional[str] = Field(default=None, min_length=1, max_length=100)
+    middle_name: Optional[str] = Field(default=None, min_length=1, max_length=100)
+
+    def get_changed_fields(self) -> dict[str, str]:
+        return self.model_dump(exclude_unset=True)
 
 
 class UserAuthenticationRequest(BaseModel):
@@ -85,10 +86,10 @@ class UserSchemaBase(BaseModel):
 
 class UserSchemaFull(UserSchemaBase):
     """Полная схема пользователя"""
-    email: NormalizedEmail
-    firstName: str
-    lastName: str
-    middleName: str
+    email: Optional[NormalizedEmail] = None
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    middle_name: Optional[str] = None
 
 
 
@@ -114,9 +115,9 @@ class UserMeResponse(BaseModel):
 class StudentSchemaFull(UserSchemaBase):
     """Полная схема для студента."""
     email: NormalizedEmail
-    firstName: str
-    lastName: str
-    middleName: str
+    first_name: str
+    last_name: str
+    middle_name: str
     academGroup: str
 
 

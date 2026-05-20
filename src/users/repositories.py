@@ -52,66 +52,20 @@ class UserRepository(BaseRepository, UserRepositoryPort):
         
         return [UserRolesEnum(role_str) for role_str, in result.fetchall()]
     
-    # TODO: Сделать передачу SQLAlchemy модели в репо
-    async def update_user(self, user_id: UUID, **kwargs) -> User:
-        allowed_fields = {"first_name", "last_name", "middle_name", "email"}
-        clean_data = {k: v for k, v in kwargs.items() if k in allowed_fields and v is not None}
-
-        if clean_data:
-            old_email = None
-            if "email" in clean_data:
-                res = await self.session.execute(select(User.email).where(User.id == user_id))
-                old_email = res.scalar_one_or_none()
-
-            await self.session.execute(
-                update(User).where(User.id == user_id).values(**clean_data)
-            )
-            await self.session.commit()
-
-            await cache.delete(CacheKeys.user_profile(user_id))
-            if old_email:
-                await cache.delete(CacheKeys.user_by_email(old_email))
-                await cache.delete(CacheKeys.user_by_email(clean_data["email"]))
-
-        load_opts = RoleRegistry.get_load_options()
-        stmt = select(User).where(User.id == user_id).options(*load_opts)
-        result = await self.session.execute(stmt)
+    async def update_partial(self, user_id: UUID, update_data: dict[str, str]) -> "User | None":
+        result = await self.session.execute(
+            select(self.model).where(self.model.id == user_id).with_for_update()
+        )
         user = result.scalar_one_or_none()
+        if not user:
+            return None
 
-        if user is None:
-            raise ValueError(f"User with id {user_id} not found after update")
-
-        return user
-
-    # TODO: Сделать передачу SQLAlchemy модели в репо
-    async def update_profile(self, user_id: UUID, profile_type: str, **kwargs) -> Any:
-        profile_models = {
-            UserRolesEnum.CURATOR: Curator,
-            UserRolesEnum.ADMIN: Admin,
-            UserRolesEnum.EXPERT: Expert,
-            UserRolesEnum.STUDENT: Student,
-        }
-        ProfileModel = profile_models.get(profile_type)
-        if not ProfileModel:
-            raise ValueError(f"Unknown profile type: {profile_type}")
-
-        result = await self.session.execute(select(ProfileModel).where(ProfileModel.user_id == user_id))
-        profile = result.scalar_one_or_none()
-
-        if profile:
-            allowed = {c.key for c in ProfileModel.__table__.columns} - {"id", "user_id", "created_at", "updated_at"}
-            clean_data = {k: v for k, v in kwargs.items() if k in allowed and v is not None}
-            if clean_data:
-                await self.session.execute(
-                    update(ProfileModel).where(ProfileModel.id == profile.id).values(**clean_data)
-                )
-        else:
-            profile = ProfileModel(user_id=user_id, **{k: v for k, v in kwargs.items() if k in ProfileModel.__table__.columns})
-            self.session.add(profile)
+        for field, value in update_data.items():
+            if hasattr(user, field):
+                setattr(user, field, value)
 
         await self.session.commit()
-        await self.session.refresh(profile)
-
+        await self.session.refresh(user)
+        await cache.delete(CacheKeys.user_by_email(user.email))
         await cache.delete(CacheKeys.user_profile(user_id))
-
-        return profile
+        return user

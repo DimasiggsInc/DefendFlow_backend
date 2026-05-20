@@ -1,16 +1,18 @@
-from fastapi import Depends, HTTPException
+from uuid import UUID
+
+from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from dotenv import load_dotenv
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.auth.services import MailService, MailServiceMock
+from src.auth.services import MailService
 from src.auth.services import AuthService
 from src.auth.utils import Hasher
 from src.auth.utils import JWTService
 
 from src.auth.interfaces import AuthServicePort, MailServicePort
 from src.auth.interfaces import HasherPort
-from src.users.interfaces import UserRepositoryPort
+from src.users.interfaces import UserRepositoryPort, UserServicePort
 from src.auth.interfaces import JWTServicePort
 
 from src.users.repositories import UserRepository
@@ -20,6 +22,8 @@ from src.dependencies import get_redis
 
 from src.config import settings
 from src.users.models import User
+from src.users.dependencies import get_user_service
+from src.users.schemas import UserRolesEnum
 
 
 load_dotenv(override=True)
@@ -77,3 +81,32 @@ async def get_current_user(
         return {"id": user.id, "email": user.email}  #  TODO: Возвращать схемой пользователя, а не просто словарём
     except Exception:
         raise HTTPException(status_code=401, detail="Could not validate credentials")  # TODO: Исправить на более конкретные ошибки
+
+
+def require_role(required_role: UserRolesEnum):
+    """
+    Фабрика зависимостей для проверки роли.
+    Возвращает функцию-зависимость, которая проверяет наличие required_role у пользователя.
+    """
+    async def role_checker(
+        user: UUID = Depends(get_current_user),
+        user_service: UserServicePort = Depends(get_user_service)
+    ) -> UUID:
+        user_id = user["id"]
+        # 1. Получаем список ролей пользователя (из БД или кэша)
+        # Ожидается, что сервис вернет список Enum-ов или строк
+        user_roles = await user_service.get_roles(user_id)
+        
+        # 2. Проверка
+        # Если user_roles это список строк, то: required_role.value not in user_roles
+        # Если список Enum-ов, то: required_role not in user_roles
+        if required_role not in user_roles:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Access denied. Required role: {required_role.value}"
+            )
+        
+        # 3. Возвращаем user_id, чтобы использовать его в эндпоинте
+        return user_id
+        
+    return role_checker

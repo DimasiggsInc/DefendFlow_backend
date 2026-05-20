@@ -1,5 +1,5 @@
 # src/roles/models.py (или добавьте в src/models_hub.py)
-from sqlalchemy import Column, Enum, String, ForeignKey, DateTime
+from sqlalchemy import Column, Enum, ForeignKey, DateTime
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
