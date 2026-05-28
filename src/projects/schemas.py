@@ -4,7 +4,7 @@ from datetime import datetime
 from enum import Enum
 from typing import List, Optional
 from uuid import UUID
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from src.users.schemas import StudentSchemaFull, UserRolesEnum
 
@@ -17,10 +17,11 @@ class ProjectMemberSchema(StudentSchemaFull):
 
 class CuratorSchema(BaseModel):
     """Схема для куратора проекта."""
+    model_config = ConfigDict(from_attributes=True) 
     id: UUID
-    firstName: str
-    lastName: str
-    middleName: str
+    firstName: Optional[str] = Field(None, validation_alias="user.first_name") 
+    lastName: Optional[str] = Field(None, validation_alias="user.last_name")
+    middleName: Optional[str] = Field(None, validation_alias="user.middle_name")
 
 class ProjectLinkType(str, Enum):
     # Репозитории
@@ -76,8 +77,8 @@ class ProjectSchema(BaseModel):
 
 class ProjectFullSchemaResponse(ProjectSchema):
     """Схема для ответа информации о проекте."""
-    team: List[ProjectMemberSchema]
-    projectLinks: List[ProjectLink]
+    team: Optional[List[ProjectMemberSchema]] = None
+    projectLinks: Optional[List[ProjectLink]] = None
 
 
 
@@ -107,3 +108,41 @@ class ProjectCalendarItemResponse(BaseModel):
     participants: list[DefenseParticipantResponse] = Field(default_factory=list)
     observers: list[DefenseObserverResponse] = Field(default_factory=list)
 
+
+class ProjectCreateRequest(BaseModel):
+    """Схема для создания проекта."""
+    name: str
+    description: Optional[str] = None
+    curator_id: UUID # Куратор обычно назначается сразу
+
+class ProjectUpdateRequest(BaseModel):
+    """Схема для обновления базовой информации проекта."""
+    name: Optional[str] = None
+    description: Optional[str] = None
+
+class ProjectLinkCreateRequest(BaseModel):
+    """Схема для добавления ссылки."""
+    name: str
+    type: ProjectLinkType
+    url: str
+    description: Optional[str] = None
+
+class ProjectLinkUpdateRequest(BaseModel):
+    """Схема для обновления ссылки."""
+    name: Optional[str] = None
+    type: Optional[ProjectLinkType] = None
+    url: Optional[str] = None
+    description: Optional[str] = None
+
+class ProjectMemberAddRequest(BaseModel):
+    """Схема для добавления участника (студента) в проект."""
+    student_id: UUID
+    role_in_team: Optional[str] = None
+
+class ProjectMemberUpdateRequest(BaseModel):
+    """Схема для обновления роли участника."""
+    role_in_team: Optional[str] = None
+
+class CuratorAssignRequest(BaseModel):
+    """Схема для назначения или смены куратора."""
+    curator_id: UUID

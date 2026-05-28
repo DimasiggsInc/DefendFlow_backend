@@ -109,7 +109,14 @@ class UserAuthenticationResponse(BaseModel):
 class UserMeResponse(BaseModel):
     id: UUID
     email: NormalizedEmail
+    full_name: str | None
     roles: List[Optional[UserRolesEnum]] = []
+
+
+class CurrentUser(BaseModel):
+    id: UUID
+    email: NormalizedEmail
+    full_name: str | None = Field(None, min_length=1, max_length=60)
 
 
 class StudentSchemaFull(UserSchemaBase):

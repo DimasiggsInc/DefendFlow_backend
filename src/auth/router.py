@@ -7,7 +7,7 @@ from src.auth.dependencies import get_current_user
 from src.auth.interfaces import AuthServicePort
 
 from src.auth.dependencies import get_auth_service
-from src.users.schemas import UserAuthenticationRequest, UserAuthenticationResponse, UserMeResponse, VerifyEmailCodeRequest, SendEmailCodeRequest
+from src.users.schemas import CurrentUser, UserAuthenticationRequest, UserAuthenticationResponse, UserMeResponse, VerifyEmailCodeRequest, SendEmailCodeRequest
 from src.users.dependencies import get_user_service
 from src.users.interfaces import UserServicePort
 
@@ -73,17 +73,18 @@ async def send_email_code(
 # TODO: Сделать возрват роли пользователя
 @router.get("/me", response_model=UserMeResponse, status_code=status.HTTP_200_OK)
 async def me(
-    current_user: dict = Depends(get_current_user),
+    current_user: CurrentUser = Depends(get_current_user),
     user_service: UserServicePort = Depends(get_user_service)
 ):
     """Получить id текущего пользователя."""
-    user_roles = await user_service.get_roles(current_user["id"])
-    # print(current_user)
-    # print(user_roles)
+    user_roles = await user_service.get_roles(current_user.id)
+    print(current_user)
+    print(user_roles)
 
     return UserMeResponse(
-        id=current_user["id"],
-        email=current_user["email"],
+        id=current_user.id,
+        email=current_user.email,
+        full_name=current_user.full_name,
         roles=user_roles,
     )
 

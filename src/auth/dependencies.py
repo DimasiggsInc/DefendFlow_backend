@@ -23,7 +23,7 @@ from src.dependencies import get_redis
 from src.config import settings
 from src.users.models import User
 from src.users.dependencies import get_user_service
-from src.users.schemas import UserRolesEnum
+from src.users.schemas import UserRolesEnum, CurrentUser
 
 
 load_dotenv(override=True)
@@ -70,16 +70,19 @@ async def get_auth_service(
 async def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security),
     jwt_util: JWTServicePort = Depends(get_jwt_service),
-    auth_repo: UserRepositoryPort = Depends(get_auth_repository)
-) -> dict:
+    user_service: UserServicePort = Depends(get_user_service)
+) -> CurrentUser:
     """Получение id текущего пользователя"""
     try:
         a = jwt_util.decode(credentials.credentials)
 
-        user = await auth_repo.get_by_id(a["id"])
-        print(user.email)
-        return {"id": user.id, "email": user.email}  #  TODO: Возвращать схемой пользователя, а не просто словарём
-    except Exception:
+        user = await user_service.get_user_by_id(a["id"])
+        full_name = " ".join(filter(None, [user.first_name, user.middle_name, user.last_name]))
+        if len(full_name) == 0:
+            full_name = None
+        return CurrentUser(id=user.id, email=user.email, full_name=full_name)
+    except Exception as ex:
+        print(ex)
         raise HTTPException(status_code=401, detail="Could not validate credentials")  # TODO: Исправить на более конкретные ошибки
 
 
