@@ -122,10 +122,10 @@ class CurrentUser(BaseModel):
 class StudentSchemaFull(UserSchemaBase):
     """Полная схема для студента."""
     email: NormalizedEmail
-    first_name: str
-    last_name: str
-    middle_name: str
-    academGroup: str
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    middle_name: Optional[str] = None
+    academGroup: Optional[str] = None
 
 
 

@@ -5,6 +5,7 @@ from sqlalchemy import select, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from src.curators.models import Curator
 from src.repositories import BaseRepository
 from src.projects.interfaces import ProjectRepositoryPort
 from src.projects.models import Project, ProjectLink, ProjectMember
@@ -30,16 +31,30 @@ class ProjectRepository(BaseRepository, ProjectRepositoryPort):
         return list(result.scalars().all())
 
     async def get_project_with_details(self, project_id: UUID) -> Optional[Project]:
-        # Eager loading для полного профиля проекта
+        """
+        Загружает проект со всеми вложенными данными в ОДИН запрос (или несколько оптимизированных).
+        """
         stmt = (
             select(self.model)
             .where(self.model.id == project_id)
             .options(
-                selectinload(self.model.curator),
-                selectinload(self.model.members).selectinload(ProjectMember.student),
-                selectinload(self.model.links)
+                # 1. Загружаем Куратора
+                selectinload(Project.curator)
+                    # 2. Внутри Куратора загружаем его User (для имен)
+                    .selectinload(Curator.user), 
+                
+                # 3. Загружаем Участников
+                selectinload(Project.members)
+                    # 4. Внутри Участника загружаем его Student профиль
+                    .selectinload(ProjectMember.student)
+                        # 5. Внутри Student загружаем его User (для имен)
+                        .selectinload(Student.user),
+                
+                # 6. Загружаем Ссылки
+                selectinload(Project.links)
             )
         )
+        
         result = await self.session.execute(stmt)
         return result.scalar_one_or_none()
 
@@ -49,10 +64,16 @@ class ProjectRepository(BaseRepository, ProjectRepositoryPort):
         return list(result.scalars().all())
 
     async def get_project_team(self, project_id: UUID) -> List[ProjectMember]:
+        """
+        Отдельный метод для команды, если он используется независимо.
+        """
         stmt = (
             select(ProjectMember)
             .where(ProjectMember.project_id == project_id)
-            .options(selectinload(ProjectMember.student))
+            .options(
+                selectinload(ProjectMember.student)
+                    .selectinload(Student.user)
+            )
         )
         result = await self.session.execute(stmt)
         return list(result.scalars().all())
@@ -125,7 +146,7 @@ class ProjectRepository(BaseRepository, ProjectRepositoryPort):
 
     async def delete_project_link(self, project_id: UUID, link_id: UUID) -> None:
         stmt = delete(ProjectLink).where(
-            ProjectLink.id == link_id, 
+            ProjectLink.id == link_id,
             ProjectLink.project_id == project_id
         )
         await self.session.execute(stmt)

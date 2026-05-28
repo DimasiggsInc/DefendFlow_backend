@@ -3,6 +3,7 @@ from uuid import UUID
 
 from fastapi import HTTPException, status
 
+from src.curators.models import Curator
 from src.projects.interfaces import ProjectServicePort, ProjectRepositoryPort
 from src.projects.models import Project, ProjectLink, ProjectMember
 from src.projects.exceptions import ProjectNotFoundError, ProjectLinkNotFoundError, ProjectMemberNotFoundError
@@ -16,6 +17,47 @@ from src.projects.schemas import (
 class ProjectService(ProjectServicePort):
     def __init__(self, project_repo: ProjectRepositoryPort):
         self.project_repo = project_repo
+    
+    @staticmethod
+    def _map_member_to_schema(member: ProjectMember) -> ProjectMemberSchema:
+        """Маппит ORM ProjectMember в Pydantic ProjectMemberSchema."""
+        student_profile = member.student
+        user = student_profile.user
+        
+        # Проверяем, как называется поле группы в вашей модели Student (academ_group или academGroup)
+        academ_group = getattr(student_profile, "academ_group", None) or getattr(student_profile, "academGroup", "")
+        
+        return ProjectMemberSchema(
+            id=user.id, # Или student_profile.id, если они различаются
+            email=user.email,
+            first_name=user.first_name,
+            last_name=user.last_name,
+            middle_name=user.middle_name,
+            academGroup=academ_group,
+            roleInTeam=member.role_in_team or ""
+        )
+    
+    @staticmethod
+    def _map_link_to_schema(link: ProjectLink) -> ProjectLinkSchema:
+        """Маппит ORM ProjectLink в Pydantic ProjectLinkSchema."""
+        return ProjectLinkSchema(
+            id=link.id,
+            name=link.name,
+            type=link.type,
+            url=link.url,
+            description=link.description
+        )
+
+    @staticmethod
+    def _map_curator_to_schema(curator: Curator) -> CuratorSchema:
+        """Маппит ORM Curator в Pydantic CuratorSchema."""
+        user = curator.user
+        return CuratorSchema(
+            id=curator.id, # Или user.id
+            firstName=user.first_name,
+            lastName=user.last_name,
+            middleName=user.middle_name
+        )
 
     async def get_projects_calendar(self) -> List[ProjectCalendarItemResponse]:
         projects = await self.project_repo.get_projects_calendar()
@@ -23,29 +65,28 @@ class ProjectService(ProjectServicePort):
         # return [map_to_calendar(p) for p in projects]
         return [] 
 
-    async def get_project_info(self, project_id: UUID) -> Any:
-        project = await self.project_repo.get_project_with_details(project_id)
-        if not project:
-            raise ProjectNotFoundError(project_id)
-        return project # FastAPI сам сконвертирует ORM модель в Pydantic схему через response_model
-
-    async def get_project_links(self, project_id: UUID) -> List[ProjectLinkSchema]:
-        return await self.project_repo.get_project_links(project_id)
-
-    async def get_project_team(self, project_id: UUID) -> List[ProjectMemberSchema]:
-        return await self.project_repo.get_project_team(project_id)
-    
-    async def get_projects_calendar(self, current_user_id: UUID) -> List[ProjectCalendarItemResponse]:
-        projects = await self.project_repo.get_projects_calendar()
-        # Здесь должна быть логика маппинга ORM -> ProjectCalendarItemResponse
-        # и проверка, зарегистрирован ли current_user_id на защиту
-        return [] 
-
     async def get_project_info(self, project_id: UUID) -> ProjectFullSchemaResponse:
         project = await self.project_repo.get_project_with_details(project_id)
         if not project:
             raise ProjectNotFoundError(project_id)
-        return project # FastAPI сам преобразует ORM в Pydantic благодаря response_model
+            
+        # Собираем ответ вручную, используя мапперы
+        return ProjectFullSchemaResponse(
+            id=project.id,
+            name=project.name,
+            description=project.description,
+            curator=self._map_curator_to_schema(project.curator) if project.curator else None,
+            team=[self._map_member_to_schema(m) for m in project.members],
+            projectLinks=[self._map_link_to_schema(l) for l in project.links]
+        )
+
+    async def get_project_team(self, project_id: UUID) -> List[ProjectMemberSchema]:
+        members = await self.project_repo.get_project_team(project_id)
+        return [self._map_member_to_schema(m) for m in members]
+
+    async def get_project_links(self, project_id: UUID) -> List[ProjectLinkSchema]:
+        links = await self.project_repo.get_project_links(project_id)
+        return [self._map_link_to_schema(l) for l in links]
 
 
     # ======= Методы создания и обновления =======
@@ -75,7 +116,7 @@ class ProjectService(ProjectServicePort):
         created_project = await self.project_repo.create_project_with_creator(
             project=new_project,
             creator_student_id=student_id,
-            creator_role="Team Lead" # Роль создателя по умолчанию
+            creator_role="Team Lead"
         )
         
         # 4. Возвращаем полный профиль (подтянет пустые links и уже созданного team member)
@@ -109,6 +150,12 @@ class ProjectService(ProjectServicePort):
         )
         saved_link = await self.project_repo.add_project_link(link)
         return saved_link
+
+    async def delete_project_link(self, project_id: UUID, link_id: UUID) -> None:
+        await self.project_repo.delete_project_link(project_id, link_id)
+    
+    async def delete_all_project_links(self, project_id: UUID):
+        await self.project_repo.delete_all_project_links(project_id)
 
     async def update_project_link(self, project_id: UUID, link_id: UUID, link_data: ProjectLinkUpdateRequest) -> ProjectLinkSchema:
         link = await self.project_repo.get_link_by_id(project_id, link_id)

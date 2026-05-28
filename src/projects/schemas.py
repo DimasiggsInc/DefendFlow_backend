@@ -13,7 +13,7 @@ from src.users.schemas import StudentSchemaFull, UserRolesEnum
 # TODO: Перенести в отдельные файлы
 class ProjectMemberSchema(StudentSchemaFull):
     """Схема для участника проекта."""
-    roleInTeam: str
+    roleInTeam: Optional[str] = None
 
 class CuratorSchema(BaseModel):
     """Схема для куратора проекта."""
