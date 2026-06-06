@@ -6,7 +6,7 @@ from uuid import UUID
 
 from src.projects.models import Project, ProjectLink, ProjectMember
 from src.projects.schemas import (
-    ProjectFullSchemaResponse, ProjectCalendarItemResponse, 
+    ProjectCreateRequest, ProjectFullSchemaResponse, ProjectCalendarItemResponse, 
     ProjectLink as ProjectLinkSchema, ProjectMemberSchema, CuratorSchema
 )
 
@@ -48,6 +48,8 @@ class ProjectRepositoryPort(BaseRepositoryPort):
 
     async def delete_project_member(self, project_id: UUID, member_id: UUID) -> None: ...
 
+    async def delete_all_project_members(self, project_id: UUID) -> None: ...
+
     # Curator
     async def update_project_curator(self, project_id: UUID, curator_id: UUID) -> Optional[Project]: ...
     
@@ -63,7 +65,7 @@ class ProjectServicePort(Protocol):
 
     async def get_project_team(self, project_id: UUID) -> List[ProjectMemberSchema]: ...
 
-    async def create_project(self, project_data: ProjectFullSchemaResponse) -> Any: ...
+    async def create_project(self, project_data: ProjectCreateRequest) -> Any: ...
 
     async def update_project(self, project_id: UUID, project_data: ProjectFullSchemaResponse) -> Any: ...
 

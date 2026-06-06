@@ -16,3 +16,4 @@ email-validator
 redis>=4.6.0
 cashews
 slowapi
+docxtpl==0.20.2

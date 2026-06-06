@@ -184,6 +184,14 @@ class ProjectRepository(BaseRepository, ProjectRepositoryPort):
         )
         await self.session.execute(stmt)
         await self.session.commit()
+        
+    async def delete_all_project_members(self, project_id: UUID) -> None:
+        """
+        Удаляет всех участников (members) из проекта одним запросом.
+        """
+        stmt = delete(ProjectMember).where(ProjectMember.project_id == project_id)
+        await self.session.execute(stmt)
+        await self.session.commit()
 
     # === Curator ===
     async def update_project_curator(self, project_id: UUID, curator_id: UUID) -> Optional[Project]:

@@ -3,6 +3,7 @@ from typing import List
 
 from fastapi import APIRouter, status, Depends
 
+from src.projects.interfaces import ProjectServicePort
 from src.projects.schemas import (
     CuratorSchema, ProjectCalendarItemResponse, ProjectFullSchemaResponse, 
     ProjectMemberSchema, ProjectLink, ProjectCreateRequest, ProjectUpdateRequest,
@@ -63,7 +64,7 @@ async def get_project_team(
 @router.post("/", response_model=ProjectFullSchemaResponse, status_code=status.HTTP_201_CREATED)
 async def create_project(
     project_data: ProjectCreateRequest,
-    service: ProjectService = Depends(get_project_service),
+    service: ProjectServicePort = Depends(get_project_service),
     current_user: CurrentUser = Depends(get_current_user)
 ):
     """Создать новый проект."""

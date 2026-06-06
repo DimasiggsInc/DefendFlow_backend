@@ -63,7 +63,7 @@ class ProjectService(ProjectServicePort):
         projects = await self.project_repo.get_projects_calendar()
         # TODO: Реализовать маппинг ORM объектов Project в ProjectCalendarItemResponse
         # return [map_to_calendar(p) for p in projects]
-        return [] 
+        return []
 
     async def get_project_info(self, project_id: UUID) -> ProjectFullSchemaResponse:
         project = await self.project_repo.get_project_with_details(project_id)
@@ -108,8 +108,7 @@ class ProjectService(ProjectServicePort):
         # 2. Создаем ORM объект проекта
         new_project = Project(
             name=project_data.name,
-            description=project_data.description,
-            curator_id=project_data.curator_id
+            description=project_data.description
         )
         
         # 3. Сохраняем проект и добавляем создателя в одной транзакции
@@ -221,3 +220,7 @@ class ProjectService(ProjectServicePort):
         project = await self.project_repo.remove_project_curator(project_id)
         if not project:
             raise ProjectNotFoundError(project_id)
+    
+    async def delete_project(self, project_id: UUID):
+        await self.project_repo.delete_all_project_members(project_id)
+        await self.project_repo.delete_project(project_id)

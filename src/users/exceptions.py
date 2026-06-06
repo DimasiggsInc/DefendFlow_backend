@@ -16,3 +16,8 @@ class IncorrectPasswordError(AppException):
     status_code = status.HTTP_401_UNAUTHORIZED
     error_code = "USR_003"
     message = "Incorrect password"
+
+class AccessDeniedError(AppException):
+    status_code = status.HTTP_403_FORBIDDEN
+    error_code = "USR_004"
+    message = "Insufficient permissions"

@@ -1,6 +1,7 @@
 import os
 import sys
 from logging.config import fileConfig
+from dotenv import load_dotenv  # <-- Добавляем импорт
 
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
@@ -17,6 +18,13 @@ BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 if BASE_DIR not in sys.path:
     sys.path.insert(0, BASE_DIR)
 
+env_local_path = os.path.join(BASE_DIR, ".env_local")
+default_env_path = os.path.join(BASE_DIR, ".env")
+
+if os.path.exists(env_local_path):
+    load_dotenv(dotenv_path=env_local_path)
+else:
+    load_dotenv(dotenv_path=default_env_path)
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

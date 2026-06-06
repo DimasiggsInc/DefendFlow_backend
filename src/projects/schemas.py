@@ -113,7 +113,7 @@ class ProjectCreateRequest(BaseModel):
     """Схема для создания проекта."""
     name: str
     description: Optional[str] = None
-    curator_id: UUID # Куратор обычно назначается сразу
+    # curator_id: UUID # Куратор обычно назначается сразу
 
 class ProjectUpdateRequest(BaseModel):
     """Схема для обновления базовой информации проекта."""
