@@ -50,6 +50,3 @@ class Settings:
     MAX_VERIFICATION_ATTEMPTS: int = int(os.getenv("MAX_VERIFICATION_ATTEMPTS", 3))
 
 settings = Settings()
-
-
-print(settings.DATABASE_URL)

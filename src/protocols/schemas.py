@@ -1,79 +1,73 @@
 """Схемы для проектов."""
 
-from enum import Enum
-from typing import List, Optional
+from datetime import datetime
+from typing import Optional
 from uuid import UUID
 from pydantic import BaseModel
-
-from src.users.schemas import StudentSchemaFull
-
+from pydantic import Field
 
 
-# TODO: Перенести в отдельные файлы
-class ProjectMemberSchema(StudentSchemaFull):
-    """Схема для участника проекта."""
-    roleInTeam: str
 
-class CuratorSchema(BaseModel):
-    """Схема для куратора проекта."""
+class GradeSchema(BaseModel):
     id: UUID
-    firstName: str
-    lastName: str
-    middleName: str
+    expert_id: UUID
+    expert_name: Optional[str] = None
+    student_registration_id: UUID
+    score: float = Field(ge=0, le=100)
+    text_questions: Optional[str] = None
+    created_at: datetime
+    updated_at: datetime
 
-class ProjectLinkType(str, Enum):
-    # Репозитории
-    GITHUB = "GitHub"
-    GITLAB = "GitLab"
-    OTHER_REPO = "Other Repository"
+    class Config:
+        from_attributes = True
 
-    # Продукт
-    WEB = "Web Application"
-    MOBILE_APP = "Mobile Application"
-    ADMIN_PANEL = "Admin Panel"
 
-    # Документация и Дизайн
-    API_DOCS = "API Documentation (Swagger/Postman)"
-    DESIGN = "Design / Prototype (Figma)"
-    DOCUMENTATION = "Technical Documentation"
-    PRESENTATION = "Presentation (Online)"
-    DATABASE_SCHEMA = "Database Schema"
-    ANALYTICS = "Analytics / Metrics Dashboard"
+class GradeCreateRequest(BaseModel):
+    expert_id: UUID
+    student_registration_id: UUID
+    score: float = Field(ge=0, le=100)
+    text_questions: Optional[str] = None
 
-    # Медиа
-    VIDEO_DEMO = "Video Demo"
-    
-    # Остальное
-    OTHER = "Other"
 
-class ProjectLink(BaseModel):
-    """Схема для ссылки на проект."""
+class GradeUpdateRequest(BaseModel):
+    score: Optional[float] = Field(None, ge=0, le=100)
+    text_questions: Optional[str] = None
+
+
+# ============ FINAL SCORE ============
+
+class FinalScoreSchema(BaseModel):
     id: UUID
-    name: str
-    type: ProjectLinkType
-    url: str
-    description: Optional[str] = None
+    student_registration_id: UUID
+    total_score: float
+    calculated_at: datetime
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
 
 
+# ============ PROTOCOL ============
 
-
-
-class ProjectSchemaAdd(BaseModel):
-    """Схема для добавления проектов."""
-
-    name: str
-    description: Optional[str] = None
-
-
-class ProjectSchema(BaseModel):
-    """Схема для проекта."""
+class ProtocolSchema(BaseModel):
     id: UUID
-    name: str
-    description: Optional[str] = None
-    curator: Optional[CuratorSchema] = None
+    admin_id: UUID
+    defense_slot_id: UUID
+    defense_room_id: UUID
+    pdf_url: Optional[str] = None
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
 
 
-class ProjectFullSchemaResponse(ProjectSchema):
-    """Схема для ответа информации о проекте."""
-    team: List[ProjectMemberSchema]
-    projectLinks: List[ProjectLink]
+class ProtocolCreateRequest(BaseModel):
+    admin_id: UUID
+    defense_slot_id: UUID
+    defense_room_id: UUID
+
+
+class ProtocolPdfUpdateRequest(BaseModel):
+    pdf_url: str

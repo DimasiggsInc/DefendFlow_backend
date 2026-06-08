@@ -1,14 +1,10 @@
-from typing import Any, List
+from typing import List
 
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, update
+from sqlalchemy import select
 from uuid import UUID
 
 from src.models_hub import UserRole
-from src.admins.models import Admin
-from src.curators.models import Curator
-from src.experts.models import Expert
-from src.students.models import Student
 from src.repositories import BaseRepository
 from src.users.interfaces import UserRepositoryPort
 from src.models_hub import User

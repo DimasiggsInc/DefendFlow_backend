@@ -1,8 +1,8 @@
 """empty message
 
-Revision ID: 62397d15f083
-Revises: f80c349654de
-Create Date: 2026-06-06 13:54:10.533053
+Revision ID: 9cddafef9f41
+Revises: b1da6ff4a8af
+Create Date: 2026-06-06 22:05:58.465485
 
 """
 from typing import Sequence, Union
@@ -10,8 +10,8 @@ from typing import Sequence, Union
 
 
 # revision identifiers, used by Alembic.
-revision: str = '62397d15f083'
-down_revision: Union[str, Sequence[str], None] = 'f80c349654de'
+revision: str = '9cddafef9f41'
+down_revision: Union[str, Sequence[str], None] = 'b1da6ff4a8af'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

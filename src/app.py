@@ -11,6 +11,10 @@ from src.auth.router import router as auth_router
 from src.projects.router import router as projects_router
 from src.users.router import router as user_router
 
+from src.protocols.router import grades_router, protocols_router, final_score_router
+from src.defense.router import router as defense_router
+from src.registrations.router import registrations_expert_router, registrations_student_router
+
 
 from contextlib import asynccontextmanager
 from src.redis import init_redis, close_redis
@@ -55,6 +59,12 @@ async def root(request: Request):
 app.include_router(auth_router, prefix="/api/v1")
 app.include_router(projects_router, prefix="/api/v1")
 app.include_router(user_router, prefix="/api/v1")
+app.include_router(grades_router, prefix="/api/v1")
+app.include_router(protocols_router, prefix="/api/v1")
+app.include_router(final_score_router, prefix="/api/v1")
+app.include_router(defense_router, prefix="/api/v1")
+app.include_router(registrations_expert_router, prefix="/api/v1")
+app.include_router(registrations_student_router, prefix="/api/v1")
 
 
 

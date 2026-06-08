@@ -1,79 +1,90 @@
-"""Схемы для проектов."""
-
-from enum import Enum
-from typing import List, Optional
+from datetime import time, datetime
+from datetime import date as date_
+from typing import Optional, List
 from uuid import UUID
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
-from src.users.schemas import StudentSchemaFull
+from src.registrations.schemas import ExpertRegistrationSchema, StudentRegistrationSchema
 
 
 
-# TODO: Перенести в отдельные файлы
-class ProjectMemberSchema(StudentSchemaFull):
-    """Схема для участника проекта."""
-    roleInTeam: str
+# ============ DEFENSE SLOT ============
 
-class CuratorSchema(BaseModel):
-    """Схема для куратора проекта."""
+class DefenseSlotSchema(BaseModel):
     id: UUID
-    firstName: str
-    lastName: str
-    middleName: str
+    date: date_
+    time_start: time
+    time_end: time
+    max_expert: int
+    max_customers: int
+    created_at: datetime
+    updated_at: datetime
 
-class ProjectLinkType(str, Enum):
-    # Репозитории
-    GITHUB = "GitHub"
-    GITLAB = "GitLab"
-    OTHER_REPO = "Other Repository"
-
-    # Продукт
-    WEB = "Web Application"
-    MOBILE_APP = "Mobile Application"
-    ADMIN_PANEL = "Admin Panel"
-
-    # Документация и Дизайн
-    API_DOCS = "API Documentation (Swagger/Postman)"
-    DESIGN = "Design / Prototype (Figma)"
-    DOCUMENTATION = "Technical Documentation"
-    PRESENTATION = "Presentation (Online)"
-    DATABASE_SCHEMA = "Database Schema"
-    ANALYTICS = "Analytics / Metrics Dashboard"
-
-    # Медиа
-    VIDEO_DEMO = "Video Demo"
-    
-    # Остальное
-    OTHER = "Other"
-
-class ProjectLink(BaseModel):
-    """Схема для ссылки на проект."""
-    id: UUID
-    name: str
-    type: ProjectLinkType
-    url: str
-    description: Optional[str] = None
+    class Config:
+        from_attributes = True
 
 
+class DefenseSlotFullSchema(DefenseSlotSchema):
+    rooms: List["DefenseRoomSchema"] = []
+    registered_projects_count: int = 0
+    registered_experts_count: int = 0
 
 
+class DefenseSlotCreateRequest(BaseModel):
+    date: date_
+    time_start: time
+    time_end: time
+    max_expert: int = Field(ge=1, default=5)
+    max_customers: int = Field(ge=1, default=10)
 
-class ProjectSchemaAdd(BaseModel):
-    """Схема для добавления проектов."""
 
-    name: str
-    description: Optional[str] = None
+class DefenseSlotUpdateRequest(BaseModel):
+    date: Optional[date_] = None
+    time_start: Optional[time] = None
+    time_end: Optional[time] = None
+    max_expert: Optional[int] = Field(None, ge=1)
+    max_customers: Optional[int] = Field(None, ge=1)
 
 
-class ProjectSchema(BaseModel):
-    """Схема для проекта."""
+# ============ DEFENSE ROOM ============
+
+class DefenseRoomSchema(BaseModel):
     id: UUID
     name: str
-    description: Optional[str] = None
-    curator: Optional[CuratorSchema] = None
+    admin_id: Optional[UUID] = None
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
 
 
-class ProjectFullSchemaResponse(ProjectSchema):
-    """Схема для ответа информации о проекте."""
-    team: List[ProjectMemberSchema]
-    projectLinks: List[ProjectLink]
+class DefenseRoomCreateRequest(BaseModel):
+    name: str
+    admin_id: Optional[UUID] = None
+
+
+class DefenseRoomUpdateRequest(BaseModel):
+    name: Optional[str] = None
+    admin_id: Optional[UUID] = None
+
+
+# ============ SLOT TO ROOM ============
+
+class SlotToRoomSchema(BaseModel):
+    id: UUID
+    defense_slot_id: UUID
+    defense_room_id: UUID
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+class DefenseSlotWithRegistrationsSchema(DefenseSlotFullSchema):
+    """
+    Расширенная схема слота с информацией о записанных проектах и экспертах.
+    Используется в эндпоинте GET /defense/slots/{slot_id}.
+    """
+    student_registrations: List[StudentRegistrationSchema] = []
+    expert_registrations: List[ExpertRegistrationSchema] = []

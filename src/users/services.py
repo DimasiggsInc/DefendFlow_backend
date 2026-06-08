@@ -4,7 +4,7 @@ from fastapi import HTTPException, status
 
 from src.users.interfaces import UserServicePort, UserRepositoryPort
 from src.users.registry import RoleRegistry
-from src.users.schemas import UserFullRequest, UserPatchSchema
+from src.users.schemas import UserPatchSchema
 from src.users.models import User
 from src.users.exceptions import UserNotFoundError
 

@@ -8,7 +8,7 @@ from sqlalchemy.orm import selectinload
 from src.curators.models import Curator
 from src.repositories import BaseRepository
 from src.projects.interfaces import ProjectRepositoryPort
-from src.projects.models import Project, ProjectLink, ProjectMember
+from src.projects.models import Project, ProjectLink, ProjectMember, ProjectMemberNotAuth
 from src.students.models import Student
 
 
@@ -32,25 +32,24 @@ class ProjectRepository(BaseRepository, ProjectRepositoryPort):
 
     async def get_project_with_details(self, project_id: UUID) -> Optional[Project]:
         """
-        Загружает проект со всеми вложенными данными в ОДИН запрос (или несколько оптимизированных).
+        Загружает проект со всеми вложенными данными, включая неавторизованных участников.
         """
         stmt = (
             select(self.model)
             .where(self.model.id == project_id)
             .options(
-                # 1. Загружаем Куратора
-                selectinload(Project.curator)
-                    # 2. Внутри Куратора загружаем его User (для имен)
-                    .selectinload(Curator.user), 
+                # 1. Загружаем Куратора и его User
+                selectinload(Project.curator).selectinload(Curator.user), 
                 
-                # 3. Загружаем Участников
+                # 2. Загружаем Авторизованных Участников и их Student -> User
                 selectinload(Project.members)
-                    # 4. Внутри Участника загружаем его Student профиль
                     .selectinload(ProjectMember.student)
-                        # 5. Внутри Student загружаем его User (для имен)
-                        .selectinload(Student.user),
+                    .selectinload(Student.user),
                 
-                # 6. Загружаем Ссылки
+                # 3. 👇 ОБЯЗАТЕЛЬНО: Загружаем Неавторизованных Участников
+                selectinload(Project.members_not_auth),
+                
+                # 4. Загружаем Ссылки
                 selectinload(Project.links)
             )
         )
@@ -212,3 +211,66 @@ class ProjectRepository(BaseRepository, ProjectRepositoryPort):
             await self.session.commit()
             await self.session.refresh(project)
         return project
+    
+
+    async def get_project_not_auth_team(self, project_id: UUID) -> List[ProjectMemberNotAuth]:
+        """
+        Получает список всех неавторизованных участников проекта.
+        """
+        stmt = select(ProjectMemberNotAuth).where(
+            ProjectMemberNotAuth.project_id == project_id
+        ).order_by(ProjectMemberNotAuth.created_at)
+        result = await self.session.execute(stmt)
+        return list(result.scalars().all())
+
+    async def get_not_auth_member_by_id(self, project_id: UUID, member_id: UUID) -> Optional[ProjectMemberNotAuth]:
+        """
+        Получает конкретного неавторизованного участника по ID, проверяя принадлежность к проекту.
+        """
+        stmt = select(ProjectMemberNotAuth).where(
+            ProjectMemberNotAuth.id == member_id, 
+            ProjectMemberNotAuth.project_id == project_id
+        )
+        result = await self.session.execute(stmt)
+        return result.scalar_one_or_none()
+
+    async def add_project_not_auth_member(self, member: ProjectMemberNotAuth) -> ProjectMemberNotAuth:
+        """
+        Добавляет нового неавторизованного участника в проект.
+        """
+        self.session.add(member)
+        await self.session.commit()
+        await self.session.refresh(member)
+        return member
+
+    async def update_project_not_auth_member(self, member: ProjectMemberNotAuth) -> ProjectMemberNotAuth:
+        """
+        Обновляет данные неавторизованного участника.
+        """
+        await self.session.commit()
+        await self.session.refresh(member)
+        return member
+
+    async def delete_project_not_auth_member(self, project_id: UUID, member_id: UUID) -> None:
+        """
+        Удаляет конкретного неавторизованного участника из проекта.
+        Проверка project_id предотвращает случайное удаление записей из других проектов.
+        """
+        stmt = delete(ProjectMemberNotAuth).where(
+            ProjectMemberNotAuth.id == member_id, 
+            ProjectMemberNotAuth.project_id == project_id
+        )
+        await self.session.execute(stmt)
+        await self.session.commit()
+        
+    async def delete_all_project_not_auth_members(self, project_id: UUID) -> None:
+        """
+        Удаляет всех неавторизованных участников из проекта одним запросом.
+        Полезно при полном удалении проекта или очистке команды.
+        """
+        stmt = delete(ProjectMemberNotAuth).where(
+            ProjectMemberNotAuth.project_id == project_id
+        )
+        await self.session.execute(stmt)
+        await self.session.commit()
+

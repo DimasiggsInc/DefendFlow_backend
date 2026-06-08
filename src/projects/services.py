@@ -1,14 +1,14 @@
-from typing import List, Any
+from typing import List
 from uuid import UUID
 
 from fastapi import HTTPException, status
 
 from src.curators.models import Curator
 from src.projects.interfaces import ProjectServicePort, ProjectRepositoryPort
-from src.projects.models import Project, ProjectLink, ProjectMember
+from src.projects.models import Project, ProjectLink, ProjectMember, ProjectMemberNotAuth
 from src.projects.exceptions import ProjectNotFoundError, ProjectLinkNotFoundError, ProjectMemberNotFoundError
 from src.projects.schemas import (
-    ProjectFullSchemaResponse, ProjectCalendarItemResponse, ProjectLink as ProjectLinkSchema, 
+    ProjectFullSchemaResponse, ProjectCalendarItemResponse, ProjectLink as ProjectLinkSchema, ProjectMemberNotAuthCreateRequest, ProjectMemberNotAuthSchema, ProjectMemberNotAuthUpdateRequest, 
     ProjectMemberSchema, CuratorSchema, ProjectCreateRequest, ProjectUpdateRequest,
     ProjectLinkCreateRequest, ProjectLinkUpdateRequest, ProjectMemberAddRequest, ProjectMemberUpdateRequest
 )
@@ -17,6 +17,18 @@ from src.projects.schemas import (
 class ProjectService(ProjectServicePort):
     def __init__(self, project_repo: ProjectRepositoryPort):
         self.project_repo = project_repo
+    
+    @staticmethod
+    def _map_not_auth_member_to_schema(member: ProjectMemberNotAuth) -> ProjectMemberNotAuthSchema:
+        """Маппит ORM ProjectMemberNotAuth в Pydantic ProjectMemberNotAuthSchema."""
+        return ProjectMemberNotAuthSchema(
+            id=member.id,
+            first_name=member.first_name,
+            last_name=member.last_name,
+            middle_name=member.middle_name,
+            role_in_team=member.role_in_team or "",
+            academ_group=member.academ_group
+        )
     
     @staticmethod
     def _map_member_to_schema(member: ProjectMember) -> ProjectMemberSchema:
@@ -63,30 +75,31 @@ class ProjectService(ProjectServicePort):
         projects = await self.project_repo.get_projects_calendar()
         # TODO: Реализовать маппинг ORM объектов Project в ProjectCalendarItemResponse
         # return [map_to_calendar(p) for p in projects]
-        return []
+        return projects
 
     async def get_project_info(self, project_id: UUID) -> ProjectFullSchemaResponse:
         project = await self.project_repo.get_project_with_details(project_id)
         if not project:
             raise ProjectNotFoundError(project_id)
             
-        # Собираем ответ вручную, используя мапперы
         return ProjectFullSchemaResponse(
             id=project.id,
             name=project.name,
             description=project.description,
             curator=self._map_curator_to_schema(project.curator) if project.curator else None,
             team=[self._map_member_to_schema(m) for m in project.members],
-            projectLinks=[self._map_link_to_schema(l) for l in project.links]
+
+            not_auth_members=[self._map_not_auth_member_to_schema(m) for m in project.members_not_auth],
+            projectLinks=[self._map_link_to_schema(i) for i in project.links]
         )
 
     async def get_project_team(self, project_id: UUID) -> List[ProjectMemberSchema]:
         members = await self.project_repo.get_project_team(project_id)
-        return [self._map_member_to_schema(m) for m in members]
+        return [self._map_member_to_schema(i) for i in members]
 
     async def get_project_links(self, project_id: UUID) -> List[ProjectLinkSchema]:
         links = await self.project_repo.get_project_links(project_id)
-        return [self._map_link_to_schema(l) for l in links]
+        return [self._map_link_to_schema(i) for i in links]
 
 
     # ======= Методы создания и обновления =======
@@ -224,3 +237,39 @@ class ProjectService(ProjectServicePort):
     async def delete_project(self, project_id: UUID):
         await self.project_repo.delete_all_project_members(project_id)
         await self.project_repo.delete_project(project_id)
+
+
+
+    # --- Not auth members ---
+    async def add_project_not_auth_member(self, project_id: UUID, data: ProjectMemberNotAuthCreateRequest) -> ProjectMemberNotAuthSchema:
+        if not await self.project_repo.get_project_with_details(project_id):
+            raise ProjectNotFoundError(project_id)
+
+        member = ProjectMemberNotAuth(
+            project_id=project_id,
+            first_name=data.first_name,
+            last_name=data.last_name,
+            middle_name=data.middle_name,
+            role_in_team=data.role_in_team,
+            academ_group=data.academ_group
+        )
+        saved_member = await self.project_repo.add_project_not_auth_member(member)
+        return self._map_not_auth_member_to_schema(saved_member)
+
+    async def update_project_not_auth_member(self, project_id: UUID, member_id: UUID, data: ProjectMemberNotAuthUpdateRequest) -> ProjectMemberNotAuthSchema:
+        member = await self.project_repo.get_not_auth_member_by_id(project_id, member_id)
+        if not member:
+            raise ProjectMemberNotFoundError(member_id)
+            
+        update_data = data.model_dump(exclude_unset=True)
+        for field, value in update_data.items():
+            setattr(member, field, value)
+            
+        await self.project_repo.update_project_not_auth_member(member)
+        return self._map_not_auth_member_to_schema(member)
+
+    async def delete_project_not_auth_member(self, project_id: UUID, member_id: UUID) -> None:
+        await self.project_repo.delete_project_not_auth_member(project_id, member_id)
+
+    async def delete_all_project_not_auth_members(self, project_id: UUID) -> None:
+        await self.project_repo.delete_all_project_not_auth_members(project_id)

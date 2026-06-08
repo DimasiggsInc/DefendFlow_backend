@@ -9,7 +9,7 @@ from src.curators.models import Curator  # noqa
 from src.roles.models import UserRole  # noqa
 
 # 2. Затем проекты (зависят от пользователей/кураторов)
-from src.projects.models import Project, ProjectMember, ProjectLink  # noqa
+from src.projects.models import Project, ProjectMember, ProjectLink, ProjectMemberNotAuth  # noqa
 
 # 3. ЗАТЕМ расписание (DefenseSlot, DefenseRoom). 
 # Важно: они должны быть определены ДО регистраций!

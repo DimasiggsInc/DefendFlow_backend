@@ -59,6 +59,7 @@ class Project(Base):
     curator: Mapped["Curator"] = relationship("Curator", back_populates="projects")
     members: Mapped[List["ProjectMember"]] = relationship("ProjectMember", back_populates="project", cascade="all, delete-orphan")
     links: Mapped[List["ProjectLink"]] = relationship("ProjectLink", back_populates="project", cascade="all, delete-orphan")
+    members_not_auth: Mapped[List["ProjectMemberNotAuth"]] = relationship("ProjectMemberNotAuth", back_populates="project", cascade="all, delete-orphan")
     
     student_registrations: Mapped[List["StudentRegistration"]] = relationship("StudentRegistration", back_populates="project")
 
@@ -92,3 +93,21 @@ class ProjectMember(Base):
     student: Mapped["Student"] = relationship("Student", back_populates="project_members")
     project: Mapped["Project"] = relationship("Project", back_populates="members")
     registrations: Mapped[List["StudentRegistration"]] = relationship("StudentRegistration", back_populates="member")
+
+class ProjectMemberNotAuth(Base):
+    """Участник проекта (связывает студента и проект)."""
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    project_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("project.id"), nullable=False)
+    
+    last_name: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    first_name: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    middle_name: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+
+    role_in_team: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    academ_group: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), onupdate=func.now())
+
+    project: Mapped["Project"] = relationship("Project", back_populates="members_not_auth")

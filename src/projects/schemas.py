@@ -57,7 +57,27 @@ class ProjectLink(BaseModel):
     description: Optional[str] = None
 
 
+class ProjectMemberNotAuthSchema(BaseModel):
+    id: UUID
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    middle_name: Optional[str] = None
+    role_in_team: str
+    academ_group: Optional[str] = None
 
+class ProjectMemberNotAuthCreateRequest(BaseModel):
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    middle_name: Optional[str] = None
+    role_in_team: str
+    academ_group: Optional[str] = None
+
+class ProjectMemberNotAuthUpdateRequest(BaseModel):
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    middle_name: Optional[str] = None
+    role_in_team: Optional[str] = None
+    academ_group: Optional[str] = None
 
 
 class ProjectSchemaAdd(BaseModel):
@@ -78,8 +98,8 @@ class ProjectSchema(BaseModel):
 class ProjectFullSchemaResponse(ProjectSchema):
     """Схема для ответа информации о проекте."""
     team: Optional[List[ProjectMemberSchema]] = None
+    not_auth_members: List[ProjectMemberNotAuthSchema] = None
     projectLinks: Optional[List[ProjectLink]] = None
-
 
 
 

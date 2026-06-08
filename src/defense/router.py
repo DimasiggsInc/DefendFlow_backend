@@ -1,173 +1,153 @@
-"""Обработчик проектов."""
-
 import uuid
+from datetime import date
+from typing import Optional, List
 
-from fastapi import APIRouter, status
+from fastapi import APIRouter, Depends, Query, status
+
+from src.auth.dependencies import get_current_user
+from src.users.schemas import CurrentUser
 
 
-from src.projects.schemas import CuratorSchema, ProjectFullSchemaResponse, ProjectMemberSchema, ProjectLink, ProjectLinkType
 
 
-router = APIRouter(
-    prefix="/project",
-    tags=["Project"],
+from src.defense.schemas import (
+    DefenseRoomCreateRequest,
+    DefenseRoomSchema, 
+    DefenseRoomUpdateRequest,
+    DefenseSlotCreateRequest,
+    DefenseSlotSchema,
+    DefenseSlotUpdateRequest,
+    DefenseSlotWithRegistrationsSchema,
+    SlotToRoomSchema,
 )
 
-# TODO: Добавить проверку прав доступа (только участники проекта, куратор и админ могут видеть информацию о проекте)
-# TODO: Добавить обработку ошибок (например, если проект не найден, вернуть 404)
-
-#========GET========#
-@router.get("/{project_id}", response_model=ProjectFullSchemaResponse, status_code=status.HTTP_200_OK)
-async def get_project_info(project_id: uuid.UUID,): # current_user: dict = Depends(get_current_user)
-    """Получить информацию о проекте. (Пока что возвращает заглушку)"""
-    curator = CuratorSchema(
-        id="123e4567-e89b-12d3-a456-426614174001",
-        firstName="Иван",
-        lastName="Иванов",
-        middleName="Иванович"
-    )
-    
-    member = ProjectMemberSchema(
-        id="123e4567-e89b-12d3-a456-426614174002",
-        email="mail@example.com",
-        firstName="Петр",
-        lastName="Петров",
-        middleName="Петрович",
-        academGroup="РИ-1488_67_42_52",
-        roleInTeam="Разработчик"
-    )
-
-    link1 = ProjectLink(
-        id="123e4567-e89b-12d3-a456-426614174003",
-        name="GitHub Repository",
-        type=ProjectLinkType.GITHUB,
-        url="github.com/example/project",
-        description="Репозиторий проекта на GitHub"
-    )
-    link2 = ProjectLink(
-        id="123e4567-e89b-12d3-a456-426614174004",
-        name="Figma Design",
-        type=ProjectLinkType.DESIGN,
-        url="figma.com/example/project-design",
-        description="Дизайн проекта в Figma"
-    )
-
-    project = ProjectFullSchemaResponse(
-        id=project_id,
-        name="Пример проекта",
-        description="Это пример описания проекта.",
-        curator=curator,
-        team=[member, member],
-        projectLinks=[link1, link2],
-    )
-    return project
-
-@router.get("/{project_id}/links", response_model=list[ProjectLink], status_code=status.HTTP_200_OK)
-async def get_project_links(project_id: uuid.UUID): # current_user: dict = Depends(get_current_user)
-    """Получить ссылки на ресурсы проекта. (Пока что возвращает заглушку)"""
-    link1 = ProjectLink(
-        id="123e4567-e89b-12d3-a456-426614174003",
-        name="GitHub Repository",
-        type=ProjectLinkType.GITHUB,
-        url="github.com/example/project",
-        description="Репозиторий проекта на GitHub"
-    )
-    link2 = ProjectLink(
-        id="123e4567-e89b-12d3-a456-426614174004",
-        name="Figma Design",
-        type=ProjectLinkType.DESIGN,
-        url="figma.com/example/project-design",
-        description="Дизайн проекта в Figma"
-    )
-    return [link1, link2]
-
-@router.get("/{project_id}/team", response_model=list[ProjectMemberSchema], status_code=status.HTTP_200_OK)
-async def get_project_team(project_id: uuid.UUID): # current_user: dict = Depends(get_current_user)
-    """Получить информацию о команде проекта. (Пока что возвращает заглушку)"""
-    member = ProjectMemberSchema(
-        id="123e4567-e89b-12d3-a456-426614174002",
-        email="mail@example.com",
-        firstName="Петр",
-        lastName="Петров",
-        middleName="Петрович",
-        academGroup="РИ-1488_67_42_52",
-        roleInTeam="Разработчик"
-    )
-    return [member, member]
 
 
-#=======POST========#
-@router.post("/", response_model=ProjectFullSchemaResponse, status_code=status.HTTP_201_CREATED)
-async def create_project(project: ProjectFullSchemaResponse): # current_user: dict = Depends(get_current_user)
-    """Создать новый проект. (Пока что возвращает заглушку)"""
-    return project
-
-@router.post("/{project_id}/links", response_model=ProjectLink, status_code=status.HTTP_201_CREATED)
-async def add_project_link(project_id: uuid.UUID, link: ProjectLink): # current_user: dict = Depends(get_current_user)
-    """Добавить ссылку на ресурс проекта. (Пока что возвращает заглушку)"""
-    return link
-
-@router.post("/{project_id}/team", response_model=ProjectMemberSchema, status_code=status.HTTP_201_CREATED)
-async def add_project_member(project_id: uuid.UUID, member: ProjectMemberSchema): # current_user: dict = Depends(get_current_user)
-    """Добавить участника в команду проекта. (Пока что возвращает заглушку)"""
-    return member
-
-@router.post("/{project_id}/curator", response_model=CuratorSchema, status_code=status.HTTP_201_CREATED)
-async def add_project_curator(project_id: uuid.UUID, curator: CuratorSchema): # current_user: dict = Depends(get_current_user)
-    """Назначить куратора проекта. (Пока что возвращает заглушку)"""
-    return CuratorSchema(
-            id=curator.id,
-            firstName=curator.firstName,
-            lastName=curator.lastName,
-            middleName=curator.middleName
-        )
+router = APIRouter(prefix="/defense/slots", tags=["Defense Slots"])
 
 
-#======DELETE=======#
-@router.delete("/{project_id}/links/{link_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_project_link(project_id: uuid.UUID, link_id: uuid.UUID): # current_user: dict = Depends(get_current_user)
-    """Удалить ссылку на ресурс проекта. (Пока что ничего не делает)"""
-    return
+@router.get("", response_model=List[DefenseSlotSchema])
+async def get_available_slots(
+    date_from: Optional[date] = Query(None, description="Start date filter"),
+    date_to: Optional[date] = Query(None, description="End date filter"),
+    current_user: CurrentUser = Depends(get_current_user),
+):
+    """Получить список доступных слотов для записи."""
+    pass
 
-@router.delete("/{project_id}/team/{member_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_project_member(project_id: uuid.UUID, member_id: uuid.UUID): # current_user: dict = Depends(get_current_user)
-    """Удалить участника из команды проекта. (Пока что ничего не делает)"""
-    return
 
-@router.delete("/{project_id}/curator", status_code=status.HTTP_204_NO_CONTENT)
-async def remove_project_curator(project_id: uuid.UUID): # current_user: dict = Depends(get_current_user)
-    """Удалить куратора проекта. (Пока что ничего не делает)"""
-    return
+@router.get("/{slot_id}", response_model=DefenseSlotWithRegistrationsSchema)
+async def get_slot_info(
+    slot_id: uuid.UUID,
+    current_user: CurrentUser = Depends(get_current_user),
+):
+    """Получить детальную информацию о слоте."""
+    pass
 
-@router.delete("/{project_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_project(project_id: uuid.UUID): # current_user: dict = Depends(get_current_user)
-    """Удалить проект. (Пока что ничего не делает)"""
-    return
 
-@router.delete("/{project_id}/links", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_all_project_links(project_id: uuid.UUID): # current_user: dict = Depends(get_current_user)
-    """Удалить все ссылки на ресурсы проекта. (Пока что ничего не делает)"""
-    return
+@router.post("", response_model=DefenseSlotSchema, status_code=status.HTTP_201_CREATED)
+async def create_slot(
+    slot_data: DefenseSlotCreateRequest,
+    current_user: CurrentUser = Depends(get_current_user),
+):
+    """Создать новый слот защиты (Admin only)."""
+    pass
+
+
+@router.put("/{slot_id}", response_model=DefenseSlotSchema)
+async def update_slot(
+    slot_id: uuid.UUID,
+    slot_data: DefenseSlotUpdateRequest,
+    current_user: CurrentUser = Depends(get_current_user),
+):
+    """Обновить слот защиты (Admin only)."""
+    pass
+
+
+@router.delete("/{slot_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_slot(
+    slot_id: uuid.UUID,
+    current_user: CurrentUser = Depends(get_current_user),
+):
+    """Удалить слот защиты (Admin only)."""
+    pass
+
+
+# --- Slot to Room ---
+
+@router.get("/{slot_id}/rooms", response_model=List[DefenseRoomSchema])
+async def get_slot_rooms(
+    slot_id: uuid.UUID,
+    current_user: CurrentUser = Depends(get_current_user),
+):
+    """Получить аудитории, привязанные к слоту."""
+    pass
+
+
+@router.post("/{slot_id}/rooms", response_model=SlotToRoomSchema, status_code=status.HTTP_201_CREATED)
+async def assign_room_to_slot(
+    slot_id: uuid.UUID,
+    room_id: uuid.UUID = Query(..., description="Room ID to assign"),
+    current_user: CurrentUser = Depends(get_current_user),
+):
+    """Привязать аудиторию к слоту (Admin only)."""
+    pass
+
+
+@router.delete("/{slot_id}/rooms/{room_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def remove_room_from_slot(
+    slot_id: uuid.UUID,
+    room_id: uuid.UUID,
+    current_user: CurrentUser = Depends(get_current_user),
+):
+    """Отвязать аудиторию от слота (Admin only)."""
+    pass
 
 
 
-#========PUT========#
-@router.put("/{project_id}", response_model=ProjectFullSchemaResponse, status_code=status.HTTP_200_OK)
-async def update_project(project_id: uuid.UUID, project: ProjectFullSchemaResponse): # current_user: dict = Depends(get_current_user)
-    """Обновить информацию о проекте. (Пока что возвращает заглушку)"""
-    return project
+router = APIRouter(prefix="/defense/rooms", tags=["Defense Rooms"])
 
-@router.put("/{project_id}/links/{link_id}", response_model=ProjectLink, status_code=status.HTTP_200_OK)
-async def update_project_link(project_id: uuid.UUID, link_id: uuid.UUID, link: ProjectLink): # current_user: dict = Depends(get_current_user)
-    """Обновить информацию о ссылке на ресурс проекта. (Пока что возвращает заглушку)"""
-    return link
 
-@router.put("/{project_id}/team/{member_id}", response_model=ProjectMemberSchema, status_code=status.HTTP_200_OK)
-async def update_project_member(project_id: uuid.UUID, member_id: uuid.UUID, member: ProjectMemberSchema): # current_user: dict = Depends(get_current_user)
-    """Обновить информацию об участнике команды проекта. (Пока что возвращает заглушку)"""
-    return member
+@router.get("", response_model=List[DefenseRoomSchema])
+async def get_all_rooms(
+    current_user: CurrentUser = Depends(get_current_user),
+):
+    """Получить список всех аудиторий."""
+    pass
 
-@router.put("/{project_id}/curator", response_model=CuratorSchema, status_code=status.HTTP_200_OK)
-async def update_project_curator(project_id: uuid.UUID, curator: CuratorSchema): # current_user: dict = Depends(get_current_user)
-    """Обновить информацию о кураторе проекта. (Пока что возвращает заглушку)"""
-    return curator
+
+@router.get("/{room_id}", response_model=DefenseRoomSchema)
+async def get_room_info(
+    room_id: uuid.UUID,
+    current_user: CurrentUser = Depends(get_current_user),
+):
+    """Получить информацию об аудитории."""
+    pass
+
+
+@router.post("", response_model=DefenseRoomSchema, status_code=status.HTTP_201_CREATED)
+async def create_room(
+    room_data: DefenseRoomCreateRequest,
+    current_user: CurrentUser = Depends(get_current_user),
+):
+    """Создать новую аудиторию (Admin only)."""
+    pass
+
+
+@router.put("/{room_id}", response_model=DefenseRoomSchema)
+async def update_room(
+    room_id: uuid.UUID,
+    room_data: DefenseRoomUpdateRequest,
+    current_user: CurrentUser = Depends(get_current_user),
+):
+    """Обновить аудиторию (Admin only)."""
+    pass
+
+
+@router.delete("/{room_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_room(
+    room_id: uuid.UUID,
+    current_user: CurrentUser = Depends(get_current_user),
+):
+    """Удалить аудиторию (Admin only)."""
+    pass

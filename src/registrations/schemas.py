@@ -1,79 +1,60 @@
-"""Схемы для проектов."""
-
-from enum import Enum
+from datetime import datetime
 from typing import List, Optional
 from uuid import UUID
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
-from src.users.schemas import StudentSchemaFull
+from src.protocols.schemas import FinalScoreSchema, GradeSchema
 
 
-
-# TODO: Перенести в отдельные файлы
-class ProjectMemberSchema(StudentSchemaFull):
-    """Схема для участника проекта."""
-    roleInTeam: str
-
-class CuratorSchema(BaseModel):
-    """Схема для куратора проекта."""
+class StudentRegistrationSchema(BaseModel):
     id: UUID
-    firstName: str
-    lastName: str
-    middleName: str
+    project_member_id: UUID
+    project_id: UUID
+    project_name: Optional[str] = None
+    defense_slot_id: UUID
+    defense_room_id: UUID
+    registered_at: datetime
+    created_at: datetime
+    updated_at: datetime
 
-class ProjectLinkType(str, Enum):
-    # Репозитории
-    GITHUB = "GitHub"
-    GITLAB = "GitLab"
-    OTHER_REPO = "Other Repository"
+    class Config:
+        from_attributes = True
 
-    # Продукт
-    WEB = "Web Application"
-    MOBILE_APP = "Mobile Application"
-    ADMIN_PANEL = "Admin Panel"
 
-    # Документация и Дизайн
-    API_DOCS = "API Documentation (Swagger/Postman)"
-    DESIGN = "Design / Prototype (Figma)"
-    DOCUMENTATION = "Technical Documentation"
-    PRESENTATION = "Presentation (Online)"
-    DATABASE_SCHEMA = "Database Schema"
-    ANALYTICS = "Analytics / Metrics Dashboard"
+class StudentRegistrationCreateRequest(BaseModel):
+    project_id: UUID
+    defense_slot_id: UUID
+    defense_room_id: UUID
+    project_member_id: UUID  # ID участника команды (team lead)
 
-    # Медиа
-    VIDEO_DEMO = "Video Demo"
-    
-    # Остальное
-    OTHER = "Other"
 
-class ProjectLink(BaseModel):
-    """Схема для ссылки на проект."""
+# ============ EXPERT REGISTRATION ============
+
+class ExpertRegistrationSchema(BaseModel):
     id: UUID
-    name: str
-    type: ProjectLinkType
-    url: str
-    description: Optional[str] = None
+    expert_id: UUID
+    expert_name: Optional[str] = None
+    defense_slot_id: UUID
+    defense_room_id: UUID
+    role_at_registration: str = "expert"
+    registered_at: datetime
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
 
 
+class ExpertRegistrationCreateRequest(BaseModel):
+    expert_id: UUID
+    defense_slot_id: UUID
+    defense_room_id: UUID
+    role_at_registration: str = Field(default="expert", pattern="^(expert|consultant|reviewer)$")
 
-
-
-class ProjectSchemaAdd(BaseModel):
-    """Схема для добавления проектов."""
-
-    name: str
-    description: Optional[str] = None
-
-
-class ProjectSchema(BaseModel):
-    """Схема для проекта."""
-    id: UUID
-    name: str
-    description: Optional[str] = None
-    curator: Optional[CuratorSchema] = None
-
-
-class ProjectFullSchemaResponse(ProjectSchema):
-    """Схема для ответа информации о проекте."""
-    team: List[ProjectMemberSchema]
-    projectLinks: List[ProjectLink]
+class RegistrationWithGradesSchema(StudentRegistrationSchema):
+    """
+    Расширенная схема записи студента с оценками и итоговым баллом.
+    Используется в эндпоинте GET /defense/registrations/student/{reg_id}.
+    """
+    grades: List[GradeSchema] = []
+    final_score: Optional[FinalScoreSchema] = None

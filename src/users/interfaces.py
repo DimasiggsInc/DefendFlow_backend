@@ -1,5 +1,5 @@
 from uuid import UUID
-from typing import Any, Protocol
+from typing import Protocol
 
 from typing import Optional, List
 
@@ -9,7 +9,6 @@ from src.repositories import BaseRepositoryPort
 from src.users.schemas import (
     UserAuthenticationResponse,
     UserAuthenticationRequest,
-    UserFullRequest,
     UserPatchSchema,
     UserRolesEnum,
 )
