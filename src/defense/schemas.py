@@ -61,12 +61,10 @@ class DefenseRoomSchema(BaseModel):
 
 class DefenseRoomCreateRequest(BaseModel):
     name: str
-    admin_id: Optional[UUID] = None
 
 
 class DefenseRoomUpdateRequest(BaseModel):
     name: Optional[str] = None
-    admin_id: Optional[UUID] = None
 
 
 # ============ SLOT TO ROOM ============

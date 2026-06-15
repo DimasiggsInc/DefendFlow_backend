@@ -1,10 +1,11 @@
 from asyncio import Protocol
 import uuid
-from datetime import datetime
+from datetime import time, datetime
+from datetime import date as date_
 from typing import TYPE_CHECKING, List
 
 from sqlalchemy import (
-    UUID, String, DateTime, func, ForeignKey, Integer
+    UUID, String, DateTime, func, ForeignKey, Integer, Date, Time
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -20,9 +21,9 @@ class DefenseSlot(Base):
     """Временной слот для защиты."""
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    date: Mapped[datetime] = mapped_column(DateTime, nullable=False)
-    time_start: Mapped[datetime] = mapped_column(DateTime, nullable=False)
-    time_end: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    date: Mapped[date_] = mapped_column(Date, nullable=False)
+    time_start: Mapped[time] = mapped_column(Time, nullable=False)
+    time_end: Mapped[time] = mapped_column(Time, nullable=False)
     max_expert: Mapped[int] = mapped_column(Integer, nullable=False)
     max_customers: Mapped[int] = mapped_column(Integer, nullable=False)
     

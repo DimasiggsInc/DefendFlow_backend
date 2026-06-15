@@ -93,7 +93,7 @@ class DefenseRoomServicePort(Protocol):
     async def get_room_info(self, room_id: UUID) -> DefenseRoomSchema:
         ...
 
-    async def create_room(self, data: DefenseRoomCreateRequest) -> DefenseRoomSchema:
+    async def create_room(self, data: DefenseRoomCreateRequest, admin_id: UUID) -> DefenseRoomSchema:
         ...
 
     async def update_room(self, room_id: UUID, data: DefenseRoomUpdateRequest) -> DefenseRoomSchema:
