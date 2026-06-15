@@ -25,7 +25,7 @@ class StudentRegistrationCreateRequest(BaseModel):
     project_id: UUID
     defense_slot_id: UUID
     defense_room_id: UUID
-    project_member_id: UUID  # ID участника команды (team lead)
+    # project_member_id: UUID
 
 
 # ============ EXPERT REGISTRATION ============
@@ -46,7 +46,7 @@ class ExpertRegistrationSchema(BaseModel):
 
 
 class ExpertRegistrationCreateRequest(BaseModel):
-    expert_id: UUID
+    # expert_id: UUID
     defense_slot_id: UUID
     defense_room_id: UUID
     role_at_registration: str = Field(default="expert", pattern="^(expert|consultant|reviewer)$")

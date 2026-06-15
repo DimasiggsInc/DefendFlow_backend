@@ -60,14 +60,14 @@ app.include_router(auth_router, prefix="/api/v1")
 app.include_router(projects_router, prefix="/api/v1")
 app.include_router(user_router, prefix="/api/v1")
 
+app.include_router(registrations_expert_router, prefix="/api/v1")
+app.include_router(registrations_student_router, prefix="/api/v1")
+
 app.include_router(rooms_router, prefix="/api/v1")
 app.include_router(slots_router, prefix="/api/v1")
-
 app.include_router(grades_router, prefix="/api/v1")
 app.include_router(protocols_router, prefix="/api/v1")
 app.include_router(final_score_router, prefix="/api/v1")
-app.include_router(registrations_expert_router, prefix="/api/v1")
-app.include_router(registrations_student_router, prefix="/api/v1")
 
 
 
