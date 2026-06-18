@@ -5,6 +5,9 @@ from sqlalchemy import select, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from src.admins.models import Admin
+from src.experts.models import Expert
+from src.registrations.models import StudentRegistration
 from src.curators.models import Curator
 from src.repositories import BaseRepository
 from src.projects.interfaces import ProjectRepositoryPort
@@ -17,14 +20,57 @@ class ProjectRepository(BaseRepository, ProjectRepositoryPort):
     def __init__(self, model: type[Project], session: AsyncSession):
         self.model = model
         self.session = session
+    
+    async def is_user_admin_or_expert(self, user_id: UUID) -> bool:
+        """Проверка, является ли пользователь админом или экспертом (один запрос)."""
+        # Проверяем в таблице admin
+        admin_query = select(Admin.id).where(Admin.user_id == user_id)
+        admin_result = await self.session.execute(admin_query)
+        if admin_result.scalar_one_or_none() is not None:
+            return True
+
+        # Проверяем в таблице expert
+        expert_query = select(Expert.id).where(Expert.user_id == user_id)
+        expert_result = await self.session.execute(expert_query)
+        return expert_result.scalar_one_or_none() is not None
+
+    async def get_my_projects(self, user_id: UUID) -> List[Project]:
+        """
+        Получить все проекты, в которых пользователь является участником.
+        Цепочка: users.id -> student.user_id -> project_member.student_id -> project
+        """
+        stmt = (
+            select(self.model)
+            .join(ProjectMember, ProjectMember.project_id == self.model.id)
+            .join(Student, Student.id == ProjectMember.student_id)
+            .where(Student.user_id == user_id)
+            .options(
+                selectinload(self.model.members).selectinload(ProjectMember.student),
+                selectinload(self.model.curator),
+                selectinload(self.model.student_registrations)
+                    .selectinload(StudentRegistration.slot),
+                selectinload(self.model.student_registrations)
+                    .selectinload(StudentRegistration.room)
+            )
+            .distinct()  # Чтобы избежать дубликатов, если у студента несколько ролей
+        )
+        result = await self.session.execute(stmt)
+        return list(result.scalars().all())
 
     async def get_projects_calendar(self) -> List[Project]:
-        # Загружаем проекты с базовыми связями для календаря
+        """
+        Загружаем проекты с данными о защите для календаря.
+        Включаем: members, curator, student_registrations (со слотом и комнатой).
+        """
         stmt = (
             select(self.model)
             .options(
                 selectinload(self.model.members).selectinload(ProjectMember.student),
-                selectinload(self.model.curator)
+                selectinload(self.model.curator),
+                selectinload(self.model.student_registrations)
+                    .selectinload(StudentRegistration.slot),
+                selectinload(self.model.student_registrations)
+                    .selectinload(StudentRegistration.room)
             )
         )
         result = await self.session.execute(stmt)

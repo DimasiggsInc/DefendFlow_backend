@@ -1,14 +1,16 @@
+from datetime import date, datetime, time
 from typing import List
 from uuid import UUID
 
 from fastapi import HTTPException, status
 
+from src.registrations.services import PermissionDeniedError
 from src.curators.models import Curator
 from src.projects.interfaces import ProjectServicePort, ProjectRepositoryPort
 from src.projects.models import Project, ProjectLink, ProjectMember, ProjectMemberNotAuth
 from src.projects.exceptions import ProjectNotFoundError, ProjectLinkNotFoundError, ProjectMemberNotFoundError
 from src.projects.schemas import (
-    ProjectFullSchemaResponse, ProjectCalendarItemResponse, ProjectLink as ProjectLinkSchema, ProjectMemberNotAuthCreateRequest, ProjectMemberNotAuthSchema, ProjectMemberNotAuthUpdateRequest, 
+    MyProjectResponse, ProjectFullSchemaResponse, ProjectCalendarItemResponse, ProjectLink as ProjectLinkSchema, ProjectMemberNotAuthCreateRequest, ProjectMemberNotAuthSchema, ProjectMemberNotAuthUpdateRequest, ProjectMemberResponse, 
     ProjectMemberSchema, CuratorSchema, ProjectCreateRequest, ProjectUpdateRequest,
     ProjectLinkCreateRequest, ProjectLinkUpdateRequest, ProjectMemberAddRequest, ProjectMemberUpdateRequest
 )
@@ -71,11 +73,93 @@ class ProjectService(ProjectServicePort):
             middleName=user.middle_name
         )
 
-    async def get_projects_calendar(self) -> List[ProjectCalendarItemResponse]:
+    async def get_my_projects(self, user_id: UUID) -> List[MyProjectResponse]:
+        """Получить проекты текущего пользователя (студента)."""
+        projects = await self.project_repo.get_my_projects(user_id)
+        return [self._map_to_my_project(p) for p in projects]
+
+
+    def _map_to_my_project(self, project: Project) -> MyProjectResponse:
+        """Маппинг Project в MyProjectResponse."""
+        # Дата/время защиты и аудитория
+        defense_datetime = None
+        room_name = None
+        
+        if project.student_registrations:
+            reg = project.student_registrations[0]
+            if reg.slot:
+                defense_datetime = datetime.combine(
+                    reg.slot.date,
+                    reg.slot.time_start
+                )
+            if reg.room:
+                room_name = reg.room.name
+        
+        # Участники команды
+        members = []
+        for member in project.members:
+            student_name = None
+            if member.student:
+                # Предполагаем, что у Student есть поле full_name или name
+                student_name = (
+                    getattr(member.student, 'full_name', None) or 
+                    getattr(member.student, 'name', None)
+                )
+            members.append(ProjectMemberResponse(
+                id=member.id,
+                student_id=member.student_id,
+                student_name=student_name,
+                role_in_team=member.role_in_team
+            ))
+        
+        # Куратор
+        curator_name = None
+        if project.curator:
+            curator_name = (
+                getattr(project.curator, 'full_name', None) or 
+                getattr(project.curator, 'name', None) or
+                getattr(project.curator, 'email', None)
+            )
+        
+        return MyProjectResponse(
+            id=project.id,
+            projectName=project.name,
+            curator_name=curator_name,
+            members=members,
+            defenseDateTime=defense_datetime,
+            room_name=room_name
+        )
+
+    async def get_projects_calendar(self, user_id: UUID) -> List[ProjectCalendarItemResponse]:
+        """Получить список всех проектов для календаря (только админ или эксперт)."""
+        if not await self.project_repo.is_user_admin_or_expert(user_id):
+            raise PermissionDeniedError(
+                "Доступ запрещен. Требуются права администратора или эксперта."
+            )
+        
         projects = await self.project_repo.get_projects_calendar()
-        # TODO: Реализовать маппинг ORM объектов Project в ProjectCalendarItemResponse
-        # return [map_to_calendar(p) for p in projects]
-        return projects
+        return [self._map_to_calendar_item(p) for p in projects]
+
+
+    def _map_to_calendar_item(self, project: Project) -> ProjectCalendarItemResponse:
+        """Маппинг Project в ProjectCalendarItemResponse."""
+        # Формируем defenseDateTime из даты и времени начала защиты
+        defense_datetime = None
+        
+        if project.student_registrations:
+            reg = project.student_registrations[0]
+            if reg.slot:
+                # Объединяем date и time_start в один datetime
+                defense_datetime = datetime.combine(
+                    reg.slot.date,
+                    reg.slot.time_start
+                )
+        
+        return ProjectCalendarItemResponse(
+            id=project.id,
+            projectName=project.name,
+            defenseDateTime=defense_datetime or datetime.min
+        )
 
     async def get_project_info(self, project_id: UUID) -> ProjectFullSchemaResponse:
         project = await self.project_repo.get_project_with_details(project_id)

@@ -1,11 +1,12 @@
 import uuid
 from typing import List
 
-from fastapi import APIRouter, status, Depends
+from fastapi import APIRouter, HTTPException, status, Depends
 
+from src.registrations.services import PermissionDeniedError
 from src.projects.interfaces import ProjectServicePort
 from src.projects.schemas import (
-    CuratorSchema, ProjectCalendarItemResponse, ProjectFullSchemaResponse, 
+    CuratorSchema, MyProjectResponse, ProjectCalendarItemResponse, ProjectFullSchemaResponse, 
     ProjectMemberSchema, ProjectMemberNotAuthSchema, ProjectLink, 
     ProjectCreateRequest, ProjectUpdateRequest,
     ProjectLinkCreateRequest, ProjectLinkUpdateRequest, 
@@ -26,13 +27,33 @@ router = APIRouter(
 
 # ======== GET ======== #
 
+@router.get("/my", response_model=List[MyProjectResponse])
+async def get_my_projects(
+    current_user: CurrentUser = Depends(get_current_user),
+    service: ProjectService = Depends(get_project_service),
+):
+    """
+    Получить список проектов текущего пользователя.
+    Доступно только студентам (пользователям с ролью student).
+    """
+    return await service.get_my_projects(current_user.id)
+
+
 @router.get("/calendar", response_model=List[ProjectCalendarItemResponse], status_code=status.HTTP_200_OK)
 async def get_projects_calendar(
+    current_user: CurrentUser = Depends(get_current_user),
     service: ProjectService = Depends(get_project_service),
-    current_user: CurrentUser = Depends(get_current_user)
 ):
-    """Получить список проектов для календаря защит."""
-    return await service.get_projects_calendar()
+    """
+    Получить список всех проектов для календаря (админ или эксперт).
+    """
+    try:
+        return await service.get_projects_calendar(current_user.id)
+    except PermissionDeniedError as e:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=str(e)
+        )
 
 @router.get("/{project_id}", response_model=ProjectFullSchemaResponse, status_code=status.HTTP_200_OK)
 async def get_project_info(

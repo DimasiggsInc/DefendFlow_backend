@@ -102,6 +102,26 @@ class ProjectFullSchemaResponse(ProjectSchema):
     projectLinks: Optional[List[ProjectLink]] = None
 
 
+class ProjectMemberResponse(BaseModel):
+    id: UUID
+    student_id: UUID
+    student_name: Optional[str] = None
+    role_in_team: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+
+class MyProjectResponse(BaseModel):
+    id: UUID
+    projectName: str
+    curator_name: Optional[str] = None
+    members: List[ProjectMemberResponse] = []
+    defenseDateTime: Optional[datetime] = None
+    room_name: Optional[str] = None
+
+    class Config:
+        from_attributes = True
 
 
 class DefenseParticipantResponse(BaseModel):
