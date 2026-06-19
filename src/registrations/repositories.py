@@ -5,9 +5,10 @@ from sqlalchemy import select, delete, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload, selectinload
 
+from src.grading.models import Grade
 from src.registrations.models import StudentRegistration, ExpertRegistration
 from src.defense.models import SlotToRoom
-from src.projects.models import ProjectMember
+from src.projects.models import Project, ProjectMember
 from src.experts.models import Expert
 from src.students.models import Student
 
@@ -23,14 +24,24 @@ class DefenseRegistrationRepository:
         project_id: Optional[UUID] = None,
         defense_slot_id: Optional[UUID] = None
     ) -> List[StudentRegistration]:
-        """Записи команд. Фильтры: по проекту или по слоту."""
         query = (
             select(StudentRegistration)
             .options(
-                selectinload(StudentRegistration.project),
+                # 🔥 Полная цепочка: project → members → student → user
+                selectinload(StudentRegistration.project)
+                    .selectinload(Project.members)
+                    .selectinload(ProjectMember.student)
+                    .selectinload(Student.user),
                 selectinload(StudentRegistration.slot),
                 selectinload(StudentRegistration.room),
                 selectinload(StudentRegistration.member)
+                    .selectinload(ProjectMember.student)
+                    .selectinload(Student.user),
+                # 🔥 Полная цепочка: grades → expert → user
+                selectinload(StudentRegistration.grades)
+                    .selectinload(Grade.expert)
+                    .selectinload(Expert.user),
+                selectinload(StudentRegistration.final_score)
             )
         )
         

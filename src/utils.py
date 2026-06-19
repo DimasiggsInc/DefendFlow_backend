@@ -39,6 +39,48 @@ def generate_protocol_from_template(data: dict, template_path="../static/templat
     print(f"Документ сформирован по шаблону: {output_path}")
 
 
+def get_user_full_name(user_or_profile) -> str:
+    """
+    Получить полное имя.
+    Работает с User, Student, Expert, Admin.
+    """
+    obj = user_or_profile
+    
+    if not obj:
+        return "Неизвестно"
+    
+    # 1. Если у объекта есть метод get_full_name (User)
+    if hasattr(obj, 'get_full_name'):
+        full_name = obj.get_full_name()
+        if full_name:
+            return full_name
+    
+    # 2. Если это User напрямую - собираем из частей
+    if hasattr(obj, 'last_name') or hasattr(obj, 'first_name'):
+        parts = []
+        if hasattr(obj, 'last_name') and obj.last_name:
+            parts.append(obj.last_name)
+        if hasattr(obj, 'first_name') and obj.first_name:
+            parts.append(obj.first_name)
+        if hasattr(obj, 'middle_name') and obj.middle_name:  # 🔥 middle_name, не patronymic
+            parts.append(obj.middle_name)
+        
+        if parts:
+            return ' '.join(parts)
+    
+    # 3. Если это Student/Expert/Admin - получаем имя через user
+    if hasattr(obj, 'user') and obj.user:
+        return get_user_full_name(obj.user)
+    
+    # 4. Fallback на email
+    if hasattr(obj, 'email') and obj.email:
+        return obj.email
+    
+    return "Неизвестно"
+
+
+
+
 if __name__ == "__main__":
     payload = {
         "topic": "Основы построения гетерогенной информационной инфраструктуры предприятия. Уровень 1(1).",

@@ -14,6 +14,7 @@ from src.projects.schemas import (
     ProjectMemberSchema, CuratorSchema, ProjectCreateRequest, ProjectUpdateRequest,
     ProjectLinkCreateRequest, ProjectLinkUpdateRequest, ProjectMemberAddRequest, ProjectMemberUpdateRequest
 )
+from src.utils import get_user_full_name
 
 
 class ProjectService(ProjectServicePort):
@@ -99,12 +100,9 @@ class ProjectService(ProjectServicePort):
         members = []
         for member in project.members:
             student_name = None
-            if member.student:
-                # Предполагаем, что у Student есть поле full_name или name
-                student_name = (
-                    getattr(member.student, 'full_name', None) or 
-                    getattr(member.student, 'name', None)
-                )
+            if member.student and hasattr(member.student, 'user'):
+                # 🔥 Используем helper
+                student_name = get_user_full_name(member.student.user)
             members.append(ProjectMemberResponse(
                 id=member.id,
                 student_id=member.student_id,
@@ -115,11 +113,7 @@ class ProjectService(ProjectServicePort):
         # Куратор
         curator_name = None
         if project.curator:
-            curator_name = (
-                getattr(project.curator, 'full_name', None) or 
-                getattr(project.curator, 'name', None) or
-                getattr(project.curator, 'email', None)
-            )
+            curator_name = get_user_full_name(project.curator)
         
         return MyProjectResponse(
             id=project.id,

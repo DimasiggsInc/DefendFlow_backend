@@ -2,6 +2,7 @@ from fastapi import FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 
 from src.middleware.rate_limiter import setup_rate_limit_middleware
 from src.middleware.trace_id import TraceIDMiddleware
@@ -28,6 +29,8 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
+
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 setup_rate_limit_middleware(app)
 app.add_middleware(TraceIDMiddleware)  # Middleware для trace_id
