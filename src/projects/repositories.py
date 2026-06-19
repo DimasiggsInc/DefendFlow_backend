@@ -35,42 +35,43 @@ class ProjectRepository(BaseRepository, ProjectRepositoryPort):
         return expert_result.scalar_one_or_none() is not None
 
     async def get_my_projects(self, user_id: UUID) -> List[Project]:
-        """
-        Получить все проекты, в которых пользователь является участником.
-        Цепочка: users.id -> student.user_id -> project_member.student_id -> project
-        """
+        """Получить все проекты, в которых пользователь является участником."""
         stmt = (
             select(self.model)
             .join(ProjectMember, ProjectMember.project_id == self.model.id)
             .join(Student, Student.id == ProjectMember.student_id)
             .where(Student.user_id == user_id)
             .options(
-                selectinload(self.model.members).selectinload(ProjectMember.student),
+                # 🔥 Полная цепочка: members → student → user
+                selectinload(self.model.members)
+                    .selectinload(ProjectMember.student)
+                    .selectinload(Student.user),
+                # 🔥 Загрузка куратора (это User)
                 selectinload(self.model.curator),
+                # 🔥 Загрузка регистраций для даты/комнаты
                 selectinload(self.model.student_registrations)
                     .selectinload(StudentRegistration.slot),
                 selectinload(self.model.student_registrations)
-                    .selectinload(StudentRegistration.room)
+                    .selectinload(StudentRegistration.room),
             )
-            .distinct()  # Чтобы избежать дубликатов, если у студента несколько ролей
+            .distinct()
         )
         result = await self.session.execute(stmt)
         return list(result.scalars().all())
 
     async def get_projects_calendar(self) -> List[Project]:
-        """
-        Загружаем проекты с данными о защите для календаря.
-        Включаем: members, curator, student_registrations (со слотом и комнатой).
-        """
+        """Загружаем проекты с базовыми связями для календаря."""
         stmt = (
             select(self.model)
             .options(
-                selectinload(self.model.members).selectinload(ProjectMember.student),
+                selectinload(self.model.members)
+                    .selectinload(ProjectMember.student)
+                    .selectinload(Student.user),
                 selectinload(self.model.curator),
                 selectinload(self.model.student_registrations)
                     .selectinload(StudentRegistration.slot),
                 selectinload(self.model.student_registrations)
-                    .selectinload(StudentRegistration.room)
+                    .selectinload(StudentRegistration.room),
             )
         )
         result = await self.session.execute(stmt)
