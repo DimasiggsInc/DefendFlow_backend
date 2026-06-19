@@ -32,7 +32,7 @@ class BaseRepository(BaseRepositoryPort, Generic[ModelType]):
     def _invalidate_single(self, obj_id: UUID):
         cache.delete(self._key("id", obj_id))
 
-    @cache(ttl="5m", key="{self._key('id', id)}")
+    # @cache(ttl="5m", key="{self._key('id', id)}")
     async def get_by_id(self, id: UUID) -> Optional[ModelType]:
         res = await self.session.execute(select(self.model).where(self.model.id == id))
         return res.scalar_one_or_none()
